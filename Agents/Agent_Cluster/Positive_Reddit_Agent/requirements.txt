@@ -1,0 +1,20 @@
+# Core dependencies for Reddit Agents
+requests
+python-dotenv
+exa-py
+
+# MCP (Model Context Protocol) dependencies
+mcp
+
+# FastAPI and web server dependencies
+fastapi
+uvicorn
+pydantic
+
+# uAgents framework dependencies
+uagents
+uagents-core
+
+# Additional utilities
+asyncio-mqtt
+typing-extensions
