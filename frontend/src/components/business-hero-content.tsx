@@ -3,15 +3,29 @@
 import {usePrivy} from '@privy-io/react-auth';
 
 export default function BusinessHeroContent() {
-  const {login, authenticated, ready} = usePrivy();
+  const {login, authenticated, ready, user} = usePrivy();
 
-  const handleGetStarted = () => {
+  const handleGetStarted = async () => {
     if (!authenticated) {
       login();
     } else {
-      // User is already authenticated, redirect to dashboard/onboarding
-      // This will be implemented later
-      console.log('User is authenticated, redirect to dashboard');
+      // Check if user already has a business profile
+      try {
+        const response = await fetch(`/api/businesses?wallet_address=${user?.wallet?.address}`)
+        const result = await response.json()
+        
+        if (result.business) {
+          // Existing business - redirect to dashboard
+          window.location.href = '/business-dashboard'
+        } else {
+          // New business - redirect to onboarding
+          window.location.href = '/business-onboarding'
+        }
+      } catch (error) {
+        console.error('Failed to check business status:', error)
+        // Default to onboarding on error
+        window.location.href = '/business-onboarding'
+      }
     }
   };
   return (
