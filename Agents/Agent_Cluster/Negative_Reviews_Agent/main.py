@@ -323,9 +323,9 @@ reviews_search_agent = ReviewsSearchAgent()
 
 # Create uAgent
 agent = Agent(
-    name="asi_negative_reviews_search_agent",
+    name="brandx_negative_reviews_search_agent",
     port=8080,  # Different port from positive reviews agent
-    seed="asi negative reviews search agent seed",
+    seed="brandx negative reviews search agent seed",
     mailbox=True,
     endpoint=["http://localhost:8080/submit"]
 )
