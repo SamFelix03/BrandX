@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { createPublicClient, http } from 'viem'
+import { sepolia } from 'viem/chains'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,13 +16,39 @@ export async function POST(request: NextRequest) {
       social_links,
       is_token_issuer,
       token_contract_address,
-      profile_picture_url
+      profile_picture_url,
+      ens_domain
     } = body
 
     // Validate required fields
-    if (!wallet_address || !business_name) {
+    if (!wallet_address || !business_name || !ens_domain) {
       return NextResponse.json(
-        { error: 'wallet_address and business_name are required' },
+        { error: 'wallet_address, business_name, and ens_domain are required' },
+        { status: 400 }
+      )
+    }
+
+    // Verify ENS ownership (required)
+    try {
+      const publicClient = createPublicClient({
+        chain: sepolia,
+        transport: http()
+      })
+
+      const resolvedAddress = await publicClient.getEnsAddress({
+        name: ens_domain
+      })
+
+      if (!resolvedAddress || resolvedAddress.toLowerCase() !== wallet_address.toLowerCase()) {
+        return NextResponse.json(
+          { error: 'ENS domain does not resolve to the connected wallet address' },
+          { status: 400 }
+        )
+      }
+    } catch (error) {
+      console.error('ENS verification error:', error)
+      return NextResponse.json(
+        { error: 'Failed to verify ENS domain ownership' },
         { status: 400 }
       )
     }
@@ -34,7 +62,8 @@ export async function POST(request: NextRequest) {
       p_social_links: social_links || {},
       p_is_token_issuer: is_token_issuer || false,
       p_token_contract_address: token_contract_address || null,
-      p_profile_picture_url: profile_picture_url || null
+      p_profile_picture_url: profile_picture_url || null,
+      p_ens_domain: ens_domain || null
     })
 
     if (error) {
