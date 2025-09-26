@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth-store'
 
 interface BusinessOnboardingFormProps {
   walletAddress: string
@@ -10,6 +11,7 @@ interface BusinessOnboardingFormProps {
 export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboardingFormProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const fetchBusiness = useAuthStore((state) => state.fetchBusiness)
   
   const [formData, setFormData] = useState({
     business_name: '',
@@ -110,6 +112,8 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
       const result = await response.json()
       
       if (result.success) {
+        // Refresh the business data in our store
+        await fetchBusiness(walletAddress)
         router.push('/business-dashboard')
       } else {
         console.error('Submission failed:', result.error)

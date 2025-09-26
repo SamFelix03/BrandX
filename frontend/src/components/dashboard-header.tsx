@@ -1,6 +1,7 @@
 "use client"
 
 import { usePrivy } from '@privy-io/react-auth'
+import { useAuthStore } from '@/stores/auth-store'
 
 interface DashboardHeaderProps {
   business?: {
@@ -10,7 +11,13 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ business }: DashboardHeaderProps) {
-  const { logout } = usePrivy()
+  const { logout: privyLogout } = usePrivy()
+  const storeLogout = useAuthStore((state) => state.logout)
+  
+  const handleLogout = () => {
+    storeLogout()
+    privyLogout()
+  }
 
   return (
     <header className="relative z-30 flex items-center justify-between p-6 bg-black/20 backdrop-blur-sm border-b border-white/10">
@@ -39,7 +46,7 @@ export default function DashboardHeader({ business }: DashboardHeaderProps) {
 
       {/* Logout Button */}
       <button
-        onClick={logout}
+        onClick={handleLogout}
         className="px-4 py-2 bg-white/10 text-white text-sm rounded-lg hover:bg-white/20 transition-colors border border-white/20"
       >
         Logout

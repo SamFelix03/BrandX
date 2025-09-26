@@ -1,50 +1,11 @@
 "use client"
 
-import { usePrivy } from '@privy-io/react-auth'
-import { useEffect, useState } from 'react'
+import { useAuthStore } from '@/stores/auth-store'
 import ShaderBackground from '../../components/shader-background'
 import DashboardHeader from '../../components/dashboard-header'
 
-interface Business {
-  id: string
-  business_name: string
-  description?: string
-  location?: string
-  website?: string
-  profile_picture_url?: string
-  smart_contract_address?: string
-  created_at: string
-}
-
 export default function BusinessDashboard() {
-  const { authenticated, user } = usePrivy()
-  const [business, setBusiness] = useState<Business | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (authenticated && user?.wallet?.address) {
-      fetchBusiness()
-    }
-  }, [authenticated, user])
-
-  const fetchBusiness = async () => {
-    try {
-      const response = await fetch(`/api/businesses?wallet_address=${user?.wallet?.address}`)
-      const result = await response.json()
-      
-      if (result.business) {
-        setBusiness(result.business)
-      } else {
-        // Redirect to onboarding if no business found
-        window.location.href = '/business-onboarding'
-      }
-    } catch (error) {
-      console.error('Failed to fetch business:', error)
-      // Don't redirect on error, just show loading state
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { authenticated, user, business, businessLoading } = useAuthStore()
 
   if (!authenticated) {
     return (
@@ -70,7 +31,7 @@ export default function BusinessDashboard() {
     )
   }
 
-  if (loading) {
+  if (businessLoading) {
     return (
       <ShaderBackground>
         <DashboardHeader />

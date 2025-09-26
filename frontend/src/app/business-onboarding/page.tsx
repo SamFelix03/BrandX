@@ -1,41 +1,14 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { usePrivy } from '@privy-io/react-auth'
+import { useAuthStore } from '@/stores/auth-store'
 import ShaderBackground from '../../components/shader-background'
 import Header from '../../components/header'
 import BusinessOnboardingForm from '../../components/business-onboarding-form'
 
 export default function BusinessOnboarding() {
-  const { authenticated, user } = usePrivy()
-  const [checkingExisting, setCheckingExisting] = useState(true)
+  const { authenticated, user, businessLoading } = useAuthStore()
 
-  useEffect(() => {
-    if (authenticated && user?.wallet?.address) {
-      checkExistingBusiness()
-    } else {
-      setCheckingExisting(false)
-    }
-  }, [authenticated, user])
-
-  const checkExistingBusiness = async () => {
-    try {
-      const response = await fetch(`/api/businesses?wallet_address=${user?.wallet?.address}`)
-      const result = await response.json()
-      
-      if (result.business) {
-        // User already has a business, redirect to dashboard
-        window.location.href = '/business-dashboard'
-        return
-      }
-    } catch (error) {
-      console.error('Failed to check existing business:', error)
-    } finally {
-      setCheckingExisting(false)
-    }
-  }
-
-  if (checkingExisting) {
+  if (businessLoading) {
     return (
       <ShaderBackground>
         <Header />

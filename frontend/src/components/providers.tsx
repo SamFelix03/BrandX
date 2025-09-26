@@ -1,6 +1,8 @@
 'use client';
 
 import {PrivyProvider} from '@privy-io/react-auth';
+import AuthSync from './auth-sync';
+import AuthMiddleware from './auth-middleware';
 
 export default function Providers({children}: {children: React.ReactNode}) {
   return (
@@ -21,6 +23,8 @@ export default function Providers({children}: {children: React.ReactNode}) {
         // Set Google as the default login method
       }}
     >
+      <AuthSync />
+      <AuthMiddleware />
       {children}
     </PrivyProvider>
   );
