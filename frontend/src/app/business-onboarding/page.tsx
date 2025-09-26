@@ -6,7 +6,22 @@ import Header from '../../components/header'
 import BusinessOnboardingForm from '../../components/business-onboarding-form'
 
 export default function BusinessOnboarding() {
-  const { authenticated, user, businessLoading } = useAuthStore()
+  const { authenticated, user, businessLoading, ready } = useAuthStore()
+
+  // Show loading state while Privy is initializing
+  if (!ready) {
+    return (
+      <ShaderBackground>
+        <Header />
+        <main className="absolute top-20 left-0 right-0 bottom-0 flex items-center justify-center z-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white/70">Initializing...</p>
+          </div>
+        </main>
+      </ShaderBackground>
+    )
+  }
 
   if (businessLoading) {
     return (

@@ -15,8 +15,14 @@ export default function BusinessHeroContent() {
         const result = await response.json()
         
         if (result.business) {
-          // Existing business - redirect to dashboard
-          window.location.href = '/business-dashboard'
+          // Existing business - check if contract is deployed
+          if (result.business.smart_contract_address) {
+            // Contract deployed - go to dashboard
+            window.location.href = '/business-dashboard'
+          } else {
+            // Contract not deployed - complete setup in bounty management
+            window.location.href = '/bounty-management'
+          }
         } else {
           // New business - redirect to onboarding
           window.location.href = '/business-onboarding'
