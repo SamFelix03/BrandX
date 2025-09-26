@@ -16,8 +16,7 @@ contract BusinessContract is ERC721, Ownable {
     enum RewardType {
         NONE,            // Points only, no direct reward
         WEB2_VOUCHER,    // Points + Mints voucher NFT
-        TOKEN_AIRDROP,   // Points + Direct token transfer
-        NFT_REWARD       // Points + Mint special NFT
+        TOKEN_AIRDROP    // Points + Direct token transfer
     }
     
     struct RewardTemplate {
@@ -31,11 +30,12 @@ contract BusinessContract is ERC721, Ownable {
         // Web2 specific
         string voucherMetadata;   // JSON with discount %, terms, etc.
         uint256 validityPeriod;   // How long voucher is valid (seconds)
+        string imageUrl;          // Voucher background image URL
+        string brandColor;        // Hex color for voucher branding (#FF6B6B)
         
         // Web3 specific  
         address tokenAddress;     // ERC20 token for airdrops
         uint256 tokenAmount;      // Amount to airdrop
-        string nftMetadata;       // For NFT rewards
     }
     
     struct Bounty {
@@ -47,6 +47,12 @@ contract BusinessContract is ERC721, Ownable {
         uint256 expiry;
         uint256 maxCompletions;    // 0 = unlimited
         uint256 currentCompletions;
+        
+        // Enhanced fields from bounty suggestions
+        string category;           // "Social Media", "Purchase", "Engagement", etc.
+        string difficulty;         // "Easy", "Medium", "Hard"
+        uint256 estimatedReward;   // Estimated points/reward value
+        string targetAudience;     // "All loyalty program members", "Premium members", etc.
     }
     
     struct Prize {
@@ -73,6 +79,9 @@ contract BusinessContract is ERC721, Ownable {
     
     // ==================== STATE VARIABLES ====================
     
+    // Hardcoded admin address with owner-level permissions
+    address public constant ADMIN_ADDRESS = 0xF08936cA98E0a97F24c5D997Db2252ae6aCCaa21; // Replace with your actual admin address
+    
     string public businessUuid;
     string public businessName;
     string public businessDescription;
@@ -96,6 +105,10 @@ contract BusinessContract is ERC721, Ownable {
     mapping(uint256 => RewardTemplate) public rewardTemplates;
     mapping(uint256 => Prize) public prizes;
     mapping(address => UserData) private userData;
+    mapping(uint256 => uint256) public tokenToRewardTemplate; // tokenId => rewardTemplateId
+    
+    // Claim status tracking
+    mapping(uint256 => bool) public voucherClaimed;        // tokenId => claimed status
     
     uint256[] public activeBountyIds;
     uint256[] public activeRewardIds;
@@ -112,9 +125,15 @@ contract BusinessContract is ERC721, Ownable {
     event PrizeCreated(uint256 indexed prizeId, string name, uint256 pointsCost);
     event PrizeClaimed(address indexed user, uint256 indexed prizeId, uint256 pointsSpent);
     event VoucherMinted(address indexed user, uint256 indexed tokenId, uint256 rewardTemplateId);
+    event VoucherClaimed(address indexed user, uint256 indexed tokenId, uint256 timestamp);
     event TokensAirdropped(address indexed user, address tokenAddress, uint256 amount);
     
     // ==================== MODIFIERS ====================
+    
+    modifier onlyOwnerOrAdmin() {
+        require(msg.sender == owner() || msg.sender == ADMIN_ADDRESS, "Only owner or admin can call this");
+        _;
+    }
     
     modifier onlyLoyaltyMember() {
         require(loyaltyMembers[msg.sender], "Not a loyalty member");
@@ -159,7 +178,7 @@ contract BusinessContract is ERC721, Ownable {
      * @param _user Wallet address of the user
      * @param _ensName Full ENS name (e.g., "sarah.joescoffee.eth")
      */
-    function addLoyaltyMember(address _user, string memory _ensName) external onlyOwner {
+    function addLoyaltyMember(address _user, string memory _ensName) external onlyOwnerOrAdmin {
         require(!loyaltyMembers[_user], "Member exists");
         require(!ensNameExists[_ensName], "ENS taken");
         require(bytes(_ensName).length > 0, "Empty ENS");
@@ -179,7 +198,7 @@ contract BusinessContract is ERC721, Ownable {
         emit LoyaltyMemberAdded(_user, _ensName);
     }
     
-    function removeLoyaltyMember(address _user) external onlyOwner {
+    function removeLoyaltyMember(address _user) external onlyOwnerOrAdmin {
         require(loyaltyMembers[_user], "Not a member");
         
         string memory ensName = userData[_user].ensName;
@@ -205,10 +224,11 @@ contract BusinessContract is ERC721, Ownable {
         uint256 _pointsValue,
         string memory _voucherMetadata,
         uint256 _validityPeriod,
+        string memory _imageUrl,
+        string memory _brandColor,
         address _tokenAddress,
-        uint256 _tokenAmount,
-        string memory _nftMetadata
-    ) external onlyOwner returns (uint256) {
+        uint256 _tokenAmount
+    ) external onlyOwnerOrAdmin returns (uint256) {
         uint256 rewardId = nextRewardId++;
         
         rewardTemplates[rewardId] = RewardTemplate({
@@ -220,9 +240,10 @@ contract BusinessContract is ERC721, Ownable {
             active: true,
             voucherMetadata: _voucherMetadata,
             validityPeriod: _validityPeriod,
+            imageUrl: _imageUrl,
+            brandColor: _brandColor,
             tokenAddress: _tokenAddress,
-            tokenAmount: _tokenAmount,
-            nftMetadata: _nftMetadata
+            tokenAmount: _tokenAmount
         });
         
         activeRewardIds.push(rewardId);
@@ -230,7 +251,7 @@ contract BusinessContract is ERC721, Ownable {
         return rewardId;
     }
     
-    function toggleRewardTemplate(uint256 _rewardId) external onlyOwner rewardExists(_rewardId) {
+    function toggleRewardTemplate(uint256 _rewardId) external onlyOwnerOrAdmin rewardExists(_rewardId) {
         rewardTemplates[_rewardId].active = !rewardTemplates[_rewardId].active;
     }
     
@@ -241,8 +262,12 @@ contract BusinessContract is ERC721, Ownable {
         string memory _description,
         uint256 _rewardTemplateId,
         uint256 _expiry,
-        uint256 _maxCompletions
-    ) external onlyOwner rewardExists(_rewardTemplateId) returns (uint256) {
+        uint256 _maxCompletions,
+        string memory _category,
+        string memory _difficulty,
+        uint256 _estimatedReward,
+        string memory _targetAudience
+    ) external onlyOwnerOrAdmin rewardExists(_rewardTemplateId) returns (uint256) {
         require(rewardTemplates[_rewardTemplateId].active, "Inactive reward");
         
         uint256 bountyId = nextBountyId++;
@@ -255,7 +280,11 @@ contract BusinessContract is ERC721, Ownable {
             active: true,
             expiry: _expiry,
             maxCompletions: _maxCompletions,
-            currentCompletions: 0
+            currentCompletions: 0,
+            category: _category,
+            difficulty: _difficulty,
+            estimatedReward: _estimatedReward,
+            targetAudience: _targetAudience
         });
         
         activeBountyIds.push(bountyId);
@@ -263,13 +292,13 @@ contract BusinessContract is ERC721, Ownable {
         return bountyId;
     }
     
-    function toggleBounty(uint256 _bountyId) external onlyOwner bountyExists(_bountyId) {
+    function toggleBounty(uint256 _bountyId) external onlyOwnerOrAdmin bountyExists(_bountyId) {
         bounties[_bountyId].active = !bounties[_bountyId].active;
     }
     
     // ==================== BOUNTY COMPLETION ====================
     
-    function completeBounty(address _user, uint256 _bountyId) external onlyOwner bountyExists(_bountyId) {
+    function completeBounty(address _user, uint256 _bountyId) external onlyOwnerOrAdmin bountyExists(_bountyId) {
         require(loyaltyMembers[_user], "User not a loyalty member");
         
         Bounty storage bounty = bounties[_bountyId];
@@ -291,8 +320,6 @@ contract BusinessContract is ERC721, Ownable {
             _mintVoucher(_user, bounty.rewardTemplateId);
         } else if (reward.rewardType == RewardType.TOKEN_AIRDROP) {
             _airdropTokens(_user, reward.tokenAddress, reward.tokenAmount);
-        } else if (reward.rewardType == RewardType.NFT_REWARD) {
-            _mintNFTReward(_user, reward.nftMetadata);
         }
         
         bounty.currentCompletions++;
@@ -310,7 +337,7 @@ contract BusinessContract is ERC721, Ownable {
         uint256 _pointsCost,
         uint256 _maxClaims,
         string memory _metadata
-    ) external onlyOwner returns (uint256) {
+    ) external onlyOwnerOrAdmin returns (uint256) {
         require(bytes(_name).length > 0, "Empty name");
         require(_pointsCost > 0, "Zero cost");
         
@@ -335,7 +362,7 @@ contract BusinessContract is ERC721, Ownable {
     /**
      * @dev Toggle prize active status
      */
-    function togglePrize(uint256 _prizeId) external onlyOwner prizeExists(_prizeId) {
+    function togglePrize(uint256 _prizeId) external onlyOwnerOrAdmin prizeExists(_prizeId) {
         prizes[_prizeId].active = !prizes[_prizeId].active;
     }
     
@@ -361,12 +388,43 @@ contract BusinessContract is ERC721, Ownable {
         emit PrizeClaimed(msg.sender, _prizeId, prize.pointsCost);
     }
     
+    // ==================== VOUCHER CLAIM MANAGEMENT ====================
+    
+    /**
+     * @dev Claim a voucher (mark as used/redeemed)
+     * @param _tokenId The voucher NFT token ID to claim
+     */
+    function claimVoucher(uint256 _tokenId) external onlyOwnerOrAdmin {
+        require(_ownerOf(_tokenId) != address(0), "Voucher does not exist");
+        require(!voucherClaimed[_tokenId], "Voucher already claimed");
+        
+        address voucherOwner = ownerOf(_tokenId);
+        require(loyaltyMembers[voucherOwner], "Voucher owner not a loyalty member");
+        
+        // Mark voucher as claimed
+        voucherClaimed[_tokenId] = true;
+        
+        emit VoucherClaimed(voucherOwner, _tokenId, block.timestamp);
+    }
+    
+    /**
+     * @dev Check if a voucher is claimed
+     * @param _tokenId The voucher NFT token ID
+     * @return bool Whether the voucher has been claimed
+     */
+    function isVoucherClaimed(uint256 _tokenId) external view returns (bool) {
+        require(_ownerOf(_tokenId) != address(0), "Voucher does not exist");
+        return voucherClaimed[_tokenId];
+    }
+    
+    
     // ==================== INTERNAL REWARD PROCESSING ====================
     
     function _mintVoucher(address _user, uint256 _rewardTemplateId) internal {
         uint256 tokenId = _nextTokenId++;
         _mint(_user, tokenId);
         userData[_user].ownedVouchers.push(tokenId);
+        tokenToRewardTemplate[tokenId] = _rewardTemplateId;
         
         emit VoucherMinted(_user, tokenId, _rewardTemplateId);
     }
@@ -380,13 +438,27 @@ contract BusinessContract is ERC721, Ownable {
         emit TokensAirdropped(_user, _tokenAddress, _amount);
     }
     
-    function _mintNFTReward(address _user, string memory _metadata) internal {
-        uint256 tokenId = _nextTokenId++;
-        _mint(_user, tokenId);
+    
+    // ==================== ERC721 OVERRIDES ====================
+    
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_ownerOf(tokenId) != address(0), "Token does not exist");
         
-        // Note: For full implementation, you'd store metadata mapping
-        emit VoucherMinted(_user, tokenId, 0); // Using 0 for NFT rewards
+        uint256 rewardTemplateId = tokenToRewardTemplate[tokenId];
+        RewardTemplate memory template = rewardTemplates[rewardTemplateId];
+        
+        // Return basic metadata - frontend can enhance this
+        return string(abi.encodePacked(
+            '{"name":"', template.name,
+            '","description":"', template.description,
+            '","image":"', template.imageUrl,
+            '","attributes":[{"trait_type":"Business","value":"', businessName, '"}]}'
+        ));
     }
+    
+    // ==================== CLAIM STATUS VIEW FUNCTIONS ====================
+    
+    
     
     // ==================== VIEW FUNCTIONS ====================
     
