@@ -9,6 +9,7 @@ interface Business {
   website?: string
   profile_picture_url?: string
   smart_contract_address?: string
+  is_token_issuer: boolean
   created_at: string
 }
 

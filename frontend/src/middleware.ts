@@ -6,8 +6,9 @@ export function middleware(request: NextRequest) {
 
   // Only handle business-related routes
   if (pathname.startsWith('/business-onboarding') || pathname.startsWith('/business-dashboard')) {
-    // For now, let the pages handle their own auth logic
-    // We'll need to implement proper auth checking here once we have session management
+    // Temporarily disable server-side auth checking
+    // Let client-side auth handle the logic with ready state
+    // This prevents the redirect loop while still solving the flicker issue
     return NextResponse.next()
   }
 
