@@ -26,6 +26,10 @@ ENS enables BrandX to deliver both uncompromising brand authenticity and rich, p
 
 ## DNS to ENS Migration Process
 
+<p align="center">
+<img width="640" height="756" alt="image" src="https://github.com/user-attachments/assets/5a40f9f3-ffe3-4298-aac3-4c1eba4376b6" />
+</p>
+
 Businesses onboarding to BrandX migrate their existing DNS domains to ENS on Ethereum Sepolia testnet through a structured 5-step process:
 
 ### Example: Apple.com Domain Migration
