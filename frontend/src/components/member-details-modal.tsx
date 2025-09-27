@@ -351,19 +351,6 @@ export default function MemberDetailsModal({
                             )}
                           </div>
 
-                          {!voucher.claimed && (
-                            <div className="mt-4 pt-3 border-t border-white/10">
-                              <button 
-                                className="w-full px-3 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-sm font-medium"
-                                onClick={() => {
-                                  // This would typically call a function to claim the voucher
-                                  alert('Voucher claiming would be implemented here')
-                                }}
-                              >
-                                Use Voucher
-                              </button>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
