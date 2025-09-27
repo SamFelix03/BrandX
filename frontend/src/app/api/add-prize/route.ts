@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, createWalletClient, http, decodeEventLog } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { arbitrumSepolia } from 'viem/chains'
-import { BUSINESS_CONTRACT_ABI, NETWORK_CONFIG } from '@/lib/constants'
+import { chainwebEvmTestnet } from '@/lib/chains'
+import { BUSINESS_CONTRACT_ABI } from '@/lib/constants'
 
 interface PrizeData {
   name: string
@@ -40,15 +40,15 @@ export async function POST(request: NextRequest) {
 
     // Initialize Web3 clients
     const publicClient = createPublicClient({
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     const account = privateKeyToAccount(process.env.DEPLOYER_PRIVATE_KEY as `0x${string}`)
     const walletClient = createWalletClient({
       account,
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     // Create prize on the contract
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Wait for transaction confirmation
     const prizeReceipt = await publicClient.waitForTransactionReceipt({ 
       hash: prizeHash,
-      timeout: 60_000
+      timeout: 240_000
     })
 
     console.log('Prize transaction confirmed:', prizeReceipt.transactionHash)
