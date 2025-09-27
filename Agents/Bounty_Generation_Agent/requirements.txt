@@ -1,0 +1,7 @@
+uagents
+uagents-core
+hyperon
+openai
+requests
+python-dotenv
+pydantic
