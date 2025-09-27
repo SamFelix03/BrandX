@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, http } from 'viem'
-import { arbitrumSepolia } from 'viem/chains'
-import { BUSINESS_CONTRACT_ABI, NETWORK_CONFIG } from '@/lib/constants'
+import { chainwebEvmTestnet } from '@/lib/chains'
+import { BUSINESS_CONTRACT_ABI } from '@/lib/constants'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     }
 
     const publicClient = createPublicClient({
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     console.log('Fetching bounties from contract:', contractAddress)

@@ -92,11 +92,11 @@ export default function MemberDetailsModal({
   const daysSinceJoined = Math.floor((Date.now() - joinedDate.getTime()) / (1000 * 60 * 60 * 24))
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: '👤' },
-    { id: 'bounties', label: 'Bounties', icon: '🎯' },
-    { id: 'vouchers', label: 'Vouchers', icon: '🎫' },
-    { id: 'prizes', label: 'Prizes', icon: '🏆' },
-    { id: 'activity', label: 'Activity', icon: '📊' }
+    { id: 'overview', label: 'Overview'},
+    { id: 'bounties', label: 'Bounties'},
+    { id: 'vouchers', label: 'Vouchers'},
+    { id: 'prizes', label: 'Prizes'},
+    { id: 'activity', label: 'Activity'}
   ] as const
 
   return (
@@ -117,14 +117,19 @@ export default function MemberDetailsModal({
               <p className="text-white/60 text-sm">{member.address}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-          >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="px-3 py-1 bg-white/10 rounded-full text-white font-medium text-lg">
+              {totalPoints.toLocaleString()}
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
         
         {/* Tab Navigation */}
@@ -139,7 +144,6 @@ export default function MemberDetailsModal({
                   : 'text-white/60 hover:text-white/80'
               }`}
             >
-              <span>{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -190,10 +194,6 @@ export default function MemberDetailsModal({
                     </h4>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-white/60">Total Points:</span>
-                        <span className="text-white font-bold text-lg">{totalPoints.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
                         <span className="text-white/60">Completed Bounties:</span>
                         <span className="text-white font-medium">{member.completedBounties}</span>
                       </div>
@@ -239,114 +239,209 @@ export default function MemberDetailsModal({
               )}
 
               {activeTab === 'bounties' && (
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                  <h4 className="text-lg font-medium text-white mb-4 flex items-center">
-                    <span className="w-2 h-2 bg-purple-400 rounded-full mr-3"></span>
-                    Completed Bounties ({member.completedBounties})
-                  </h4>
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-medium text-white flex items-center">
+                      <span className="w-2 h-2 bg-purple-400 rounded-full mr-3"></span>
+                      Completed Bounties ({member.completedBounties})
+                    </h4>
+                  </div>
                   {detailData?.completedBounties && detailData.completedBounties.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {detailData.completedBounties.map((bounty, index) => (
-                        <div key={index} className="bg-white/5 border border-white/10 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-white font-medium">{bounty.title || `Bounty #${bounty.id}`}</h5>
-                            <div className="flex items-center gap-3">
-                              {bounty.pointsEarned && (
-                                <span className="text-green-400 font-medium text-sm">+{bounty.pointsEarned} pts</span>
-                              )}
-                              {bounty.completedAt && (
-                                <span className="text-xs text-white/60">
-                                  {new Date(bounty.completedAt * 1000).toLocaleDateString()}
+                        <div key={index} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-colors">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex flex-wrap gap-2">
+                              <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                                Completed
+                              </span>
+                              {bounty.pointsEarned && bounty.pointsEarned > 0 && (
+                                <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                  +{bounty.pointsEarned} pts
                                 </span>
                               )}
                             </div>
+                            {bounty.completedAt && (
+                              <span className="text-xs text-white/60">
+                                {new Date(bounty.completedAt * 1000).toLocaleDateString()}
+                              </span>
+                            )}
                           </div>
-                          {bounty.description && (
-                            <p className="text-white/70 text-sm">{bounty.description}</p>
-                          )}
+                          
+                          <h5 className="text-lg font-medium text-white mb-2">
+                            {bounty.title || `Bounty #${bounty.id}`}
+                          </h5>
+                          <p className="text-white/70 text-sm mb-4 line-clamp-3">
+                            {bounty.description || 'No description available'}
+                          </p>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-white/60">Bounty ID:</span>
+                              <span className="text-white font-mono text-xs">#{bounty.id}</span>
+                            </div>
+                            {bounty.pointsEarned && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-white/60">Points Earned:</span>
+                                <span className="text-green-400 font-medium">+{bounty.pointsEarned}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-white/50">
-                      <p>No bounty completion details available.</p>
-                      <p className="text-xs mt-2">This member has completed {member.completedBounties} bounties.</p>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
+                      <div className="mb-4">
+                        <svg className="w-16 h-16 mx-auto text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                      <h5 className="text-white font-medium mb-2">No Completed Bounties</h5>
+                      <p className="text-white/60 text-sm">This member has completed {member.completedBounties} bounties, but details are not available.</p>
                     </div>
                   )}
                 </div>
               )}
 
               {activeTab === 'vouchers' && (
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                  <h4 className="text-lg font-medium text-white mb-4 flex items-center">
-                    <span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>
-                    Owned Vouchers ({member.ownedVouchers})
-                  </h4>
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-medium text-white flex items-center">
+                      <span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>
+                      Owned Vouchers ({member.ownedVouchers})
+                    </h4>
+                  </div>
                   {detailData?.ownedVouchers && detailData.ownedVouchers.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {detailData.ownedVouchers.map((voucher, index) => (
-                        <div key={index} className="bg-white/5 border border-white/10 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-white font-medium">{voucher.name || `Voucher #${voucher.tokenId}`}</h5>
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              voucher.claimed
-                                ? 'bg-red-500/20 text-red-300 border border-red-500/30'
-                                : 'bg-green-500/20 text-green-300 border border-green-500/30'
-                            }`}>
-                              {voucher.claimed ? 'Used' : 'Available'}
-                            </span>
+                        <div key={index} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-colors">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex flex-wrap gap-2">
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                voucher.claimed
+                                  ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                                  : 'bg-green-500/20 text-green-300 border border-green-500/30'
+                              }`}>
+                                {voucher.claimed ? 'Used' : 'Available'}
+                              </span>
+                            </div>
+                            <div className="text-xs text-white/60">
+                              #{voucher.tokenId}
+                            </div>
                           </div>
-                          {voucher.description && (
-                            <p className="text-white/70 text-sm mb-2">{voucher.description}</p>
+                          
+                          <h5 className="text-lg font-medium text-white mb-2">
+                            {voucher.name || `Voucher #${voucher.tokenId}`}
+                          </h5>
+                          <p className="text-white/70 text-sm mb-4 line-clamp-3">
+                            {voucher.description || 'Reward voucher from completing bounties'}
+                          </p>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-white/60">Token ID:</span>
+                              <span className="text-white font-mono text-xs">{voucher.tokenId}</span>
+                            </div>
+                            {voucher.rewardTemplateId && voucher.rewardTemplateId !== '0' && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-white/60">Template ID:</span>
+                                <span className="text-white font-mono text-xs">#{voucher.rewardTemplateId}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {!voucher.claimed && (
+                            <div className="mt-4 pt-3 border-t border-white/10">
+                              <button 
+                                className="w-full px-3 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-sm font-medium"
+                                onClick={() => {
+                                  // This would typically call a function to claim the voucher
+                                  alert('Voucher claiming would be implemented here')
+                                }}
+                              >
+                                Use Voucher
+                              </button>
+                            </div>
                           )}
-                          <div className="text-xs text-white/60">
-                            Token ID: {voucher.tokenId}
-                          </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-white/50">
-                      <p>No voucher details available.</p>
-                      <p className="text-xs mt-2">This member owns {member.ownedVouchers} vouchers.</p>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
+                      <div className="mb-4">
+                        <svg className="w-16 h-16 mx-auto text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                        </svg>
+                      </div>
+                      <h5 className="text-white font-medium mb-2">No Vouchers Available</h5>
+                      <p className="text-white/60 text-sm">This member owns {member.ownedVouchers} vouchers, but details are not available.</p>
                     </div>
                   )}
                 </div>
               )}
 
               {activeTab === 'prizes' && (
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                  <h4 className="text-lg font-medium text-white mb-4 flex items-center">
-                    <span className="w-2 h-2 bg-orange-400 rounded-full mr-3"></span>
-                    Claimed Prizes ({member.claimedPrizes})
-                  </h4>
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-medium text-white flex items-center">
+                      <span className="w-2 h-2 bg-orange-400 rounded-full mr-3"></span>
+                      Claimed Prizes ({member.claimedPrizes})
+                    </h4>
+                  </div>
                   {detailData?.claimedPrizes && detailData.claimedPrizes.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {detailData.claimedPrizes.map((prize, index) => (
-                        <div key={index} className="bg-white/5 border border-white/10 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="text-white font-medium">{prize.name || `Prize #${prize.id}`}</h5>
-                            <div className="flex items-center gap-3">
-                              {prize.pointsCost && (
-                                <span className="text-red-400 font-medium text-sm">-{prize.pointsCost} pts</span>
-                              )}
-                              {prize.claimedAt && (
-                                <span className="text-xs text-white/60">
-                                  {new Date(prize.claimedAt * 1000).toLocaleDateString()}
+                        <div key={index} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-colors">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex flex-wrap gap-2">
+                              <span className="px-2 py-1 text-xs rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                                Claimed
+                              </span>
+                              {prize.pointsCost && prize.pointsCost > 0 && (
+                                <span className="px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                                  -{prize.pointsCost} pts
                                 </span>
                               )}
                             </div>
+                            {prize.claimedAt && (
+                              <span className="text-xs text-white/60">
+                                {new Date(prize.claimedAt * 1000).toLocaleDateString()}
+                              </span>
+                            )}
                           </div>
-                          {prize.description && (
-                            <p className="text-white/70 text-sm">{prize.description}</p>
-                          )}
+                          
+                          <h5 className="text-lg font-medium text-white mb-2">
+                            {prize.name || `Prize #${prize.id}`}
+                          </h5>
+                          <p className="text-white/70 text-sm mb-4 line-clamp-3">
+                            {prize.description || 'No description available'}
+                          </p>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-white/60">Prize ID:</span>
+                              <span className="text-white font-mono text-xs">#{prize.id}</span>
+                            </div>
+                            {prize.pointsCost && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-white/60">Points Cost:</span>
+                                <span className="text-red-400 font-medium">{prize.pointsCost}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-white/50">
-                      <p>No prize claim details available.</p>
-                      <p className="text-xs mt-2">This member has claimed {member.claimedPrizes} prizes.</p>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
+                      <div className="mb-4">
+                        <svg className="w-16 h-16 mx-auto text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                      </div>
+                      <h5 className="text-white font-medium mb-2">No Claimed Prizes</h5>
+                      <p className="text-white/60 text-sm">This member has claimed {member.claimedPrizes} prizes, but details are not available.</p>
                     </div>
                   )}
                 </div>
