@@ -177,7 +177,8 @@ Members can use their ENS subdomain across any ENS-compatible application while 
 ### Line of Code
 
 **Offchain/L2 Resolver Contract**
-- [Explorer Link](https://github.com/SamFelix03/BrandX/blob/main/ENS-offchain-resolver/contracts/contracts/OffchainResolver.sol)
+
+- Deployed Address: [`0x5824Ef215aC14955fD93e0C1E039596FDdb0514D` (Ethereum Sepolia)](https://sepolia.etherscan.io/address/0x5824Ef215aC14955fD93e0C1E039596FDdb0514D)
 - [GitHub File Link](https://github.com/SamFelix03/BrandX/blob/main/ENS-offchain-resolver/contracts/contracts/OffchainResolver.sol)
 
 **CCIP-Read Gateway**
@@ -200,31 +201,6 @@ Our Smart contracts act as a legal agreement between the business and all its lo
 On top of that, Kadena's ecosystem provides the NFT infrastructure we use to mint bounty completion tokens for members. These NFTs act as proof of participation and bounty completion, and the contracts also handle token transfers for token airdrop type rewards.
 
 Basically, our platform is a very good use case for Kadena's RWA tokenization goals, by issuing both ERC721 (NFT) with all the voucher metadata for claiming web2 based bounty rewards and also supporting token airdrops for web3 based rewards.
-
-### Line of Code
-
-**BrandXFactory Contract**
-- [GitHub Contract File](https://github.com/SamFelix03/BrandX/blob/main/chainweb-contracts/contracts/BrandXFactory.sol)
-
-**BusinessContract Logic**
-- [GitHub Contract File](https://github.com/SamFelix03/BrandX/blob/main/chainweb-contracts/contracts/BusinessContract.sol)
-
-**Smart Contract Documentation**
-- [Detailed Documentation](https://github.com/SamFelix03/BrandX/blob/main/chainweb-contracts/README.md)
-
-**Deployed Contract Addresses**
-
-1. **BrandXFactory Contract**
-   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/address/0x9bb2363810156f7b32b255677e8C1852AC1F95E6)
-   - Address: `0x9bb2363810156f7b32b255677e8C1852AC1F95E6`
-
-2. **Example Business Contract (Apple)**
-   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/address/0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a?tab=txs)
-   - Address: `0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a`
-
-3. **Example NFT Voucher for Loyalty Member**
-   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/token/0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a/instance/1)
-   - Token ID: `1`
 
 ## NFT Issuance and Token Transfers for RWA Tokenization
 
