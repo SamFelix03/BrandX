@@ -36,9 +36,9 @@ if not AGENTVERSE_API_KEY:
 
 # Initialize agent
 agent = Agent(
-    name="brand_metrics_agent",
+    name="brandx_brand_metrics_agent",
     port=8080,
-    seed="brand metrics agent seed",
+    seed="brandx metrics agent seed",
     mailbox=True,
     endpoint=["http://localhost:8080/submit"]
 )
