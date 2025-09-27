@@ -30,9 +30,9 @@ if not AGENTVERSE_API_KEY:
 
 # Initialize agent
 agent = Agent(
-    name="xbot_agent",
+    name="brandx_xbot_agent",
     port=8080,
-    seed="xbot agent seed",
+    seed="brandx xbot agent seed",
     mailbox=True,
     endpoint=["http://localhost:8080/submit"]
 )
