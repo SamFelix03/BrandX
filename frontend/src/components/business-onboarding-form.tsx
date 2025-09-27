@@ -191,7 +191,7 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
       if (result.success) {
         // Refresh the business data in our store
         await fetchBusiness(walletAddress)
-        router.push('/bounty-management')
+        router.push('/brand-analysis')
       } else {
         console.error('Submission failed:', result.error)
         alert('Failed to submit form. Please try again.')

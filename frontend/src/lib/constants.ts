@@ -1,10 +1,10 @@
 // Contract addresses - these would be updated after deployment
 export const CONTRACT_ADDRESSES = {
-  FACTORY: "0x05c2b693426b7fDeC2cF4fE17B4e2Cab6B24921c", // Deployed on Arbitrum Sepolia Testnet
+  FACTORY: "0x05c2b693426b7fDeC2cF4fE17B4e2Cab6B24921c",
   // Individual business contract addresses will be stored in database
 } as const
 
-export const ENS_RESOLVER_ADDRESS = "0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A"
+export const ENS_RESOLVER_ADDRESS = "0x5824Ef215aC14955fD93e0C1E039596FDdb0514D"
 // Reward types mapping to contract enums
 export const REWARD_TYPES = {
   NONE: 0,
@@ -96,6 +96,13 @@ export const BUSINESS_CONTRACT_ABI = [
     ],
     "name": "createBounty",
     "outputs": [{ "name": "", "type": "uint256" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "name": "_bountyId", "type": "uint256" }],
+    "name": "toggleBounty",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -386,95 +393,199 @@ export const NETWORK_CONFIG = {
 export const WEB2_REWARD_TEMPLATES = [
   {
     id: 1,
-    name: "Social Share Bonus",
-    description: "50 points + 10% discount for sharing on social media",
+    name: "10% Off Next Purchase",
+    description: "Get 10% discount on your next order",
     rewardType: "WEB2_VOUCHER" as const,
     category: "web2",
     pointsValue: 50,
     voucherMetadata: JSON.stringify({
       discountPercentage: 10,
-      validFor: "next purchase",
-      terms: "Valid for 30 days from issuance",
-      excludes: []
+      validFor: "any purchase",
+      terms: "Valid for 30 days from issuance. Cannot be combined with other offers.",
+      excludes: ["gift cards", "shipping fees"]
     }),
     validityPeriod: 30 * 24 * 60 * 60, // 30 days
-    imageUrl: "https://api.ez-earn.com/templates/social-share.png",
-    brandColor: "#1DA1F2",
+    imageUrl: "https://api.ez-earn.com/templates/discount-10.png",
+    brandColor: "#4F46E5",
     tokenAddress: "0x0000000000000000000000000000000000000000",
     tokenAmount: 0,
     nftMetadata: ""
   },
   {
     id: 2,
-    name: "Customer Referral",
-    description: "75 points + 15% discount for successful referrals",
+    name: "15% Off Next Purchase",
+    description: "Get 15% discount on your next order",
     rewardType: "WEB2_VOUCHER" as const,
     category: "web2",
     pointsValue: 75,
     voucherMetadata: JSON.stringify({
       discountPercentage: 15,
-      validFor: "next purchase",
-      terms: "Valid for 60 days, applies when referred friend makes first purchase",
-      excludes: ["gift cards"]
+      validFor: "any purchase",
+      terms: "Valid for 60 days from issuance. Minimum purchase $50 required.",
+      excludes: ["gift cards", "shipping fees", "sale items"]
     }),
     validityPeriod: 60 * 24 * 60 * 60, // 60 days
-    imageUrl: "https://api.ez-earn.com/templates/referral.png",
-    brandColor: "#FF6B6B",
+    imageUrl: "https://api.ez-earn.com/templates/discount-15.png",
+    brandColor: "#059669",
     tokenAddress: "0x0000000000000000000000000000000000000000",
     tokenAmount: 0,
     nftMetadata: ""
   },
   {
     id: 3,
-    name: "Review & Rating",
-    description: "25 points + 5% discount for verified reviews",
+    name: "20% Off Next Purchase",
+    description: "Get 20% discount on your next order",
     rewardType: "WEB2_VOUCHER" as const,
     category: "web2",
-    pointsValue: 25,
+    pointsValue: 100,
     voucherMetadata: JSON.stringify({
-      discountPercentage: 5,
-      validFor: "next purchase",
-      terms: "Valid for 14 days, requires verified purchase",
-      excludes: []
+      discountPercentage: 20,
+      validFor: "any purchase",
+      terms: "Valid for 14 days from issuance. Minimum purchase $75 required.",
+      excludes: ["gift cards", "shipping fees", "sale items", "subscriptions"]
     }),
     validityPeriod: 14 * 24 * 60 * 60, // 14 days
-    imageUrl: "https://api.ez-earn.com/templates/review.png",
-    brandColor: "#FFC107",
+    imageUrl: "https://api.ez-earn.com/templates/discount-20.png",
+    brandColor: "#DC2626",
     tokenAddress: "0x0000000000000000000000000000000000000000",
     tokenAmount: 0,
     nftMetadata: ""
   },
   {
     id: 4,
-    name: "Newsletter Signup",
-    description: "20 points for joining the newsletter community",
-    rewardType: "NONE" as const,
+    name: "Free Shipping Voucher",
+    description: "Get free shipping on your next order",
+    rewardType: "WEB2_VOUCHER" as const,
     category: "web2",
-    pointsValue: 20,
-    voucherMetadata: "",
-    validityPeriod: 0,
-    imageUrl: "https://api.ez-earn.com/templates/newsletter.png",
-    brandColor: "#28A745",
+    pointsValue: 30,
+    voucherMetadata: JSON.stringify({
+      discountType: "free_shipping",
+      validFor: "shipping costs",
+      terms: "Valid for 45 days from issuance. Applies to standard shipping only.",
+      excludes: ["express shipping", "international orders"]
+    }),
+    validityPeriod: 45 * 24 * 60 * 60, // 45 days
+    imageUrl: "https://api.ez-earn.com/templates/free-shipping.png",
+    brandColor: "#0891B2",
     tokenAddress: "0x0000000000000000000000000000000000000000",
     tokenAmount: 0,
     nftMetadata: ""
   },
   {
     id: 5,
-    name: "First Purchase Welcome",
-    description: "100 points + 20% welcome discount for new customers",
+    name: "Buy One Get One 50% Off",
+    description: "Get 50% off the second item when you buy two",
     rewardType: "WEB2_VOUCHER" as const,
     category: "web2",
-    pointsValue: 100,
+    pointsValue: 80,
     voucherMetadata: JSON.stringify({
-      discountPercentage: 20,
-      validFor: "first purchase only",
-      terms: "Valid for 7 days, new customers only, minimum purchase $25",
-      excludes: ["gift cards", "sale items", "subscriptions"]
+      discountType: "bogo_50",
+      validFor: "eligible products",
+      terms: "Valid for 21 days. 50% discount applies to lower-priced item. Must purchase 2+ items.",
+      excludes: ["gift cards", "clearance items", "bundles"]
     }),
-    validityPeriod: 7 * 24 * 60 * 60, // 7 days
-    imageUrl: "https://api.ez-earn.com/templates/welcome.png",
-    brandColor: "#6F42C1",
+    validityPeriod: 21 * 24 * 60 * 60, // 21 days
+    imageUrl: "https://api.ez-earn.com/templates/bogo-50.png",
+    brandColor: "#7C3AED",
+    tokenAddress: "0x0000000000000000000000000000000000000000",
+    tokenAmount: 0,
+    nftMetadata: ""
+  },
+  {
+    id: 6,
+    name: "$5 Off $25 Purchase",
+    description: "Get $5 off when you spend $25 or more",
+    rewardType: "WEB2_VOUCHER" as const,
+    category: "web2",
+    pointsValue: 40,
+    voucherMetadata: JSON.stringify({
+      discountType: "fixed_amount",
+      discountAmount: 5,
+      minimumPurchase: 25,
+      validFor: "any purchase",
+      terms: "Valid for 30 days. Minimum purchase $25 required. One use per customer.",
+      excludes: ["gift cards", "taxes", "shipping"]
+    }),
+    validityPeriod: 30 * 24 * 60 * 60, // 30 days
+    imageUrl: "https://api.ez-earn.com/templates/fixed-5-off-25.png",
+    brandColor: "#EA580C",
+    tokenAddress: "0x0000000000000000000000000000000000000000",
+    tokenAmount: 0,
+    nftMetadata: ""
+  },
+  {
+    id: 7,
+    name: "$10 Off $50 Purchase",
+    description: "Get $10 off when you spend $50 or more",
+    rewardType: "WEB2_VOUCHER" as const,
+    category: "web2",
+    pointsValue: 60,
+    voucherMetadata: JSON.stringify({
+      discountType: "fixed_amount",
+      discountAmount: 10,
+      minimumPurchase: 50,
+      validFor: "any purchase",
+      terms: "Valid for 45 days. Minimum purchase $50 required. One use per customer.",
+      excludes: ["gift cards", "taxes", "shipping"]
+    }),
+    validityPeriod: 45 * 24 * 60 * 60, // 45 days
+    imageUrl: "https://api.ez-earn.com/templates/fixed-10-off-50.png",
+    brandColor: "#16A34A",
+    tokenAddress: "0x0000000000000000000000000000000000000000",
+    tokenAmount: 0,
+    nftMetadata: ""
+  },
+  {
+    id: 8,
+    name: "Free Item Voucher",
+    description: "Get a free item from our featured collection",
+    rewardType: "WEB2_VOUCHER" as const,
+    category: "web2",
+    pointsValue: 120,
+    voucherMetadata: JSON.stringify({
+      discountType: "free_item",
+      validFor: "featured collection items",
+      terms: "Valid for 14 days. Choose from eligible items. One free item per voucher.",
+      excludes: ["premium items", "limited editions", "custom orders"]
+    }),
+    validityPeriod: 14 * 24 * 60 * 60, // 14 days
+    imageUrl: "https://api.ez-earn.com/templates/free-item.png",
+    brandColor: "#DB2777",
+    tokenAddress: "0x0000000000000000000000000000000000000000",
+    tokenAmount: 0,
+    nftMetadata: ""
+  },
+  {
+    id: 9,
+    name: "Early Access Pass",
+    description: "Get 24-hour early access to new products and sales",
+    rewardType: "WEB2_VOUCHER" as const,
+    category: "web2",
+    pointsValue: 90,
+    voucherMetadata: JSON.stringify({
+      discountType: "early_access",
+      validFor: "new releases and sales",
+      terms: "Valid for 90 days. Grants 24-hour early access to new products and exclusive sales.",
+      excludes: ["clearance items", "third-party products"]
+    }),
+    validityPeriod: 90 * 24 * 60 * 60, // 90 days
+    imageUrl: "https://api.ez-earn.com/templates/early-access.png",
+    brandColor: "#9333EA",
+    tokenAddress: "0x0000000000000000000000000000000000000000",
+    tokenAmount: 0,
+    nftMetadata: ""
+  },
+  {
+    id: 10,
+    name: "Loyalty Points Only",
+    description: "Earn loyalty points with no additional voucher",
+    rewardType: "NONE" as const,
+    category: "web2",
+    pointsValue: 25,
+    voucherMetadata: "",
+    validityPeriod: 0,
+    imageUrl: "https://api.ez-earn.com/templates/points-only.png",
+    brandColor: "#64748B",
     tokenAddress: "0x0000000000000000000000000000000000000000",
     tokenAmount: 0,
     nftMetadata: ""
@@ -484,78 +595,78 @@ export const WEB2_REWARD_TEMPLATES = [
 // Web3 reward templates (only for token issuing entities)
 export const WEB3_REWARD_TEMPLATES = [
   {
-    id: 6,
-    name: "Token Airdrop",
-    description: "50 points + 100 project tokens for community engagement",
+    id: 11,
+    name: "100 Token Airdrop",
+    description: "Receive 100 project tokens directly to your wallet",
     rewardType: "TOKEN_AIRDROP" as const,
     category: "web3",
     pointsValue: 50,
     voucherMetadata: "",
     validityPeriod: 0,
-    imageUrl: "https://api.ez-earn.com/templates/token-airdrop.png",
+    imageUrl: "https://api.ez-earn.com/templates/token-airdrop-100.png",
     brandColor: "#F59E0B",
     tokenAddress: "0x0000000000000000000000000000000000000000", // Set by business
     tokenAmount: 100,
     nftMetadata: ""
   },
   {
-    id: 7,
-    name: "Governance Token",
-    description: "75 points + 50 governance tokens for active community members",
+    id: 12,
+    name: "50 Governance Tokens",
+    description: "Receive 50 governance tokens for community participation",
     rewardType: "TOKEN_AIRDROP" as const,
     category: "web3",
     pointsValue: 75,
     voucherMetadata: "",
     validityPeriod: 0,
-    imageUrl: "https://api.ez-earn.com/templates/governance-token.png",
+    imageUrl: "https://api.ez-earn.com/templates/governance-token-50.png",
     brandColor: "#8B5CF6",
     tokenAddress: "0x0000000000000000000000000000000000000000",
     tokenAmount: 50,
     nftMetadata: ""
   },
   {
-    id: 8,
-    name: "Staking Bonus",
-    description: "30 points + 50 bonus tokens for staking participation",
+    id: 13,
+    name: "250 Token Bonus",
+    description: "Receive 250 bonus tokens for high-value activities",
     rewardType: "TOKEN_AIRDROP" as const,
     category: "web3",
-    pointsValue: 30,
+    pointsValue: 100,
     voucherMetadata: "",
     validityPeriod: 0,
-    imageUrl: "https://api.ez-earn.com/templates/staking-bonus.png",
+    imageUrl: "https://api.ez-earn.com/templates/token-bonus-250.png",
     brandColor: "#10B981",
     tokenAddress: "0x0000000000000000000000000000000000000000", // Set by business
-    tokenAmount: 50,
+    tokenAmount: 250,
     nftMetadata: ""
   },
   {
-    id: 9,
-    name: "Achievement Token",
-    description: "40 points + 25 achievement tokens for milestones",
+    id: 14,
+    name: "25 Achievement Tokens",
+    description: "Receive 25 special achievement tokens for milestones",
     rewardType: "TOKEN_AIRDROP" as const,
     category: "web3",
     pointsValue: 40,
     voucherMetadata: "",
     validityPeriod: 0,
-    imageUrl: "https://api.ez-earn.com/templates/achievement-token.png",
+    imageUrl: "https://api.ez-earn.com/templates/achievement-token-25.png",
     brandColor: "#EF4444",
     tokenAddress: "0x0000000000000000000000000000000000000000",
     tokenAmount: 25,
     nftMetadata: ""
   },
   {
-    id: 10,
-    name: "Liquidity Provider",
-    description: "150 points + 200 LP rewards for providing liquidity",
+    id: 15,
+    name: "500 LP Reward Tokens",
+    description: "Receive 500 liquidity provider reward tokens",
     rewardType: "TOKEN_AIRDROP" as const,
     category: "web3",
     pointsValue: 150,
     voucherMetadata: "",
     validityPeriod: 0,
-    imageUrl: "https://api.ez-earn.com/templates/liquidity-provider.png",
+    imageUrl: "https://api.ez-earn.com/templates/lp-reward-500.png",
     brandColor: "#3B82F6",
     tokenAddress: "0x0000000000000000000000000000000000000000", // Set by business
-    tokenAmount: 200,
+    tokenAmount: 500,
     nftMetadata: ""
   }
 ] as const

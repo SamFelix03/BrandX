@@ -112,23 +112,34 @@ export async function POST(request: NextRequest) {
 
     console.log('Business contract deployed at:', contractAddress)
 
-    // Update business record with contract address
-    const { data, error } = await supabase
-      .from('businesses')
-      .update({ 
-        smart_contract_address: contractAddress,
-        deployment_tx_hash: deployHash
-      })
-      .eq('wallet_address', walletAddress)
-      .select()
+    // Update business record with contract address using RPC function
+    console.log('Updating business record for wallet:', walletAddress)
+    console.log('Setting smart_contract_address to:', contractAddress)
+    
+    const { data, error } = await supabase.rpc('update_business_with_context', {
+      p_wallet_address: walletAddress,
+      p_smart_contract_address: contractAddress
+    })
+
+    console.log('Database update result:', { data, error })
 
     if (error) {
       console.error('Database update error:', error)
       return NextResponse.json(
-        { error: 'Failed to update business record' },
+        { error: 'Failed to update business record', details: error },
         { status: 500 }
       )
     }
+
+    if (!data) {
+      console.error('No business record found for wallet:', walletAddress)
+      return NextResponse.json(
+        { error: 'Business record not found for the given wallet address' },
+        { status: 404 }
+      )
+    }
+
+    console.log('Successfully updated business record:', data)
 
     return NextResponse.json({
       success: true,
