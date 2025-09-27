@@ -11,9 +11,10 @@ interface RewardData {
   pointsValue: number
   voucherMetadata: string
   validityPeriod: number
+  imageUrl: string
+  brandColor: string
   tokenAddress: string
   tokenAmount: number
-  nftMetadata: string
 }
 
 interface BountyData {
@@ -21,6 +22,10 @@ interface BountyData {
   description: string
   expiry: number
   maxCompletions: number
+  category: string
+  difficulty: string
+  estimatedReward: number | string
+  targetAudience: string
   rewardData: RewardData
 }
 
@@ -40,6 +45,51 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate bounty data fields
+    if (!bounty.title || !bounty.description || !bounty.category || !bounty.difficulty || !bounty.targetAudience) {
+      return NextResponse.json(
+        { error: 'Missing required bounty fields: title, description, category, difficulty, targetAudience' },
+        { status: 400 }
+      )
+    }
+
+    if (typeof bounty.expiry !== 'number' || typeof bounty.maxCompletions !== 'number') {
+      return NextResponse.json(
+        { error: 'expiry and maxCompletions must be numbers' },
+        { status: 400 }
+      )
+    }
+
+    // Default estimatedReward to 0 if not provided and parse numeric value
+    const estimatedReward = (() => {
+      if (typeof bounty.estimatedReward === 'number') {
+        return bounty.estimatedReward
+      }
+      if (typeof bounty.estimatedReward === 'string') {
+        // Extract numeric value from strings like "1000 points"
+        const numericMatch = bounty.estimatedReward.match(/\d+/)
+        return numericMatch ? parseInt(numericMatch[0]) : 0
+      }
+      return 0
+    })()
+
+    // Validate reward data if provided
+    if (bounty.rewardData) {
+      if (!bounty.rewardData.name || !bounty.rewardData.description || !bounty.rewardData.rewardType) {
+        return NextResponse.json(
+          { error: 'Missing required reward data fields: name, description, rewardType' },
+          { status: 400 }
+        )
+      }
+
+      if (typeof bounty.rewardData.pointsValue !== 'number' || bounty.rewardData.pointsValue < 0) {
+        return NextResponse.json(
+          { error: 'pointsValue must be a non-negative number' },
+          { status: 400 }
+        )
+      }
+    }
+
     if (!process.env.DEPLOYER_PRIVATE_KEY) {
       return NextResponse.json(
         { error: 'Deployer private key not configured' },
@@ -49,6 +99,8 @@ export async function POST(request: NextRequest) {
 
     console.log('Adding bounty to contract:', contractAddress)
     console.log('Bounty:', bounty.title)
+    console.log('Estimated reward (raw):', bounty.estimatedReward, 'type:', typeof bounty.estimatedReward)
+    console.log('Estimated reward (parsed):', estimatedReward)
 
     // Initialize Web3 clients
     const publicClient = createPublicClient({
@@ -91,9 +143,10 @@ export async function POST(request: NextRequest) {
           (rd.pointsValue?.toString?.() || '0') === String(bounty.rewardData.pointsValue) &&
           (rd.voucherMetadata || '') === (bounty.rewardData.voucherMetadata || '') &&
           (rd.validityPeriod?.toString?.() || '0') === String(bounty.rewardData.validityPeriod || 0) &&
+          (rd.imageUrl || '') === (bounty.rewardData.imageUrl || '') &&
+          (rd.brandColor || '') === (bounty.rewardData.brandColor || '') &&
           (rd.tokenAddress || '').toLowerCase() === (bounty.rewardData.tokenAddress || '').toLowerCase() &&
-          (rd.tokenAmount?.toString?.() || '0') === String(bounty.rewardData.tokenAmount || 0) &&
-          (rd.nftMetadata || '') === (bounty.rewardData.nftMetadata || '')
+          (rd.tokenAmount?.toString?.() || '0') === String(bounty.rewardData.tokenAmount || 0)
 
         if (same && rd.active) {
           rewardTemplateId = rd.id
@@ -114,12 +167,13 @@ export async function POST(request: NextRequest) {
           bounty.rewardData.name,
           bounty.rewardData.description,
           REWARD_TYPES[bounty.rewardData.rewardType],
-          BigInt(bounty.rewardData.pointsValue),
-          bounty.rewardData.voucherMetadata,
-          BigInt(bounty.rewardData.validityPeriod),
-          bounty.rewardData.tokenAddress as `0x${string}`,
-          BigInt(bounty.rewardData.tokenAmount),
-          bounty.rewardData.nftMetadata
+          BigInt(bounty.rewardData.pointsValue || 0),
+          bounty.rewardData.voucherMetadata || '',
+          BigInt(bounty.rewardData.validityPeriod || 0),
+          bounty.rewardData.imageUrl || '',
+          bounty.rewardData.brandColor || '',
+          (bounty.rewardData.tokenAddress || '0x0000000000000000000000000000000000000000') as `0x${string}`,
+          BigInt(bounty.rewardData.tokenAmount || 0)
         ],
         account
       })
@@ -168,7 +222,11 @@ export async function POST(request: NextRequest) {
         bounty.description,
         rewardTemplateId,
         BigInt(bounty.expiry),
-        BigInt(bounty.maxCompletions)
+        BigInt(bounty.maxCompletions),
+        bounty.category,
+        bounty.difficulty,
+        BigInt(estimatedReward),
+        bounty.targetAudience
       ],
       account
     })
