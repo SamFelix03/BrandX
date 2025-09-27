@@ -1,10 +1,10 @@
 # ENS Offchain Resolver & CCIP-Read Gateway
 
-This document provides comprehensive technical documentation for BrandHero's ENS offchain resolver implementation and CCIP-Read gateway server.
+This document provides comprehensive technical documentation for BrandX's ENS offchain resolver implementation and CCIP-Read gateway server.
 
 ## Why Offchain Resolver is Required
 
-BrandHero's architecture utilizes **Kadena's Chainweb** as the primary Layer 1 blockchain for business applications and scalability. This design choice creates a unique challenge for ENS integration:
+BrandX's architecture utilizes **Kadena's Chainweb** as the primary Layer 1 blockchain for business applications and scalability. This design choice creates a unique challenge for ENS integration:
 
 ### Multi-Chain Data Architecture
 - **Primary Chain**: Kadena Chainweb stores business contracts and loyalty program logic
@@ -180,7 +180,7 @@ The server supports comprehensive ENS text record standards:
 - `com.twitter`, `com.github`: Social media handles
 - `url`: Personal website URL
 
-**BrandHero-Specific Records**
+**BrandX-Specific Records**
 - `points`: Loyalty points from Kadena contract
 - `joined`: User registration timestamp
 - `business`: Associated business domain

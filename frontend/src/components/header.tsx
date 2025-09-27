@@ -19,7 +19,7 @@ export default function Header() {
       {/* Navigation */}
       <nav className="flex items-center space-x-2">
         <a
-          href="https://BrandX.gitbook.io/BrandX-docs"
+          href="https://github.com/SamFelix03/BrandX/blob/main/README.md"
           className="text-white font-medium text-sm px-6 py-3 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all duration-200 backdrop-blur-sm"
         >
           View Docs

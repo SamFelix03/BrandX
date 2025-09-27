@@ -4,7 +4,7 @@
 
 ## Why Kadena?
 
-Kadena is the backbone that makes BrandHero possible. Every time a business sets up their loyalty program through Brand Hero, we use a Business Factory Contract deployed on Kadena to spin up a dedicated smart contract exclusively for that business. This ensures that all bounty details, enrolled members, task completions, and reward claims are transparent, tamper-proof, and verifiable on-chain. It acts as a trust layer of our platform. By deploying each business's loyalty logic as an isolated contract, we guarantee scalability and security without data conflicts.
+Kadena is the backbone that makes BrandX possible. Every time a business sets up their loyalty program through Brand Hero, we use a Business Factory Contract deployed on Kadena to spin up a dedicated smart contract exclusively for that business. This ensures that all bounty details, enrolled members, task completions, and reward claims are transparent, tamper-proof, and verifiable on-chain. It acts as a trust layer of our platform. By deploying each business's loyalty logic as an isolated contract, we guarantee scalability and security without data conflicts.
 
 Our Smart contracts act as a legal agreement between the business and all its loyalty members. Kadena's Chainweb protocol plays a crucial role here. Since Chainweb is a braided, multi-chain architecture where multiple parallel chains work together, Brand Hero can scale to onboard thousands of businesses without worrying about congestion or high gas fees. Each business contract can execute simultaneously across chains, giving us massive throughput and predictably low costs, which is vital for loyalty programs with high-frequency interactions like bounty submissions and reward claims. It was like Chainweb was tailor-made for this!
 
@@ -46,7 +46,7 @@ This dual-token approach (NFT + ERC20) is strategically designed to onboard MSME
 
 The Brand Hero system consists of two main smart contracts that work together to create a comprehensive loyalty platform:
 
-### 1. BrandHeroFactory Contract (`BrandHeroFactory.sol`)
+### 1. BrandXFactory Contract (`BrandXFactory.sol`)
 
 The factory contract serves as the central deployment hub and registry for all business contracts.
 
