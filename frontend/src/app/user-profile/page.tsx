@@ -281,7 +281,7 @@ export default function UserProfile() {
                 {profile ? 'My' : 'Create'} <span className="font-medium italic instrument">Profile</span>
               </h1>
               <p className="text-white/70">
-                {profile ? 'Manage your EzEarn profile' : 'Complete your profile to join loyalty programs'}
+                {profile ? 'Manage your BrandX profile' : 'Complete your profile to join loyalty programs'}
               </p>
             </div>
             
@@ -395,7 +395,7 @@ export default function UserProfile() {
                   </label>
                   <div className="mb-2">
                     <p className="text-white/50 text-xs">
-                      Your username will be used to create your ENS subdomain (username.ezearn.eth)
+                      Your username will be used to create your ENS subdomain (username.BrandX.eth)
                     </p>
                   </div>
                   {isEditing && !profile?.username ? (

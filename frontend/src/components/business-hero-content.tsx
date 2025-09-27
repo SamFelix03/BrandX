@@ -40,14 +40,14 @@ export default function BusinessHeroContent() {
 
         {/* Main CTA */}
         <h1 className="text-5xl md:text-6xl lg:text-7xl tracking-tight font-light text-white mb-8 leading-tight">
-          Let us <span className="font-medium italic instrument">Supercharge</span> your business
+          <span className="font-medium italic instrument">Supercharge</span> your business
           <br />
-          with <span className="font-medium italic instrument">BrandHero</span>, our AI agent.
+          with our AI Agent Cluster
         </h1>
 
         {/* Description */}
         <p className="text-lg font-light text-white/70 mb-8 leading-relaxed max-w-2xl mx-auto">
-          Transform your customer engagement with intelligent loyalty programs that adapt and grow with your business.
+          Transform your customer engagement with intelligent loyalty programs that adapt and grow your business.
         </p>
 
         {/* Get Started Button */}

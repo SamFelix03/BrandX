@@ -49,7 +49,7 @@ export default function DashboardHeader({ business, isSidebarCollapsed, onToggle
             <h1 className="text-white font-medium text-lg">
               {business?.business_name || 'Business Dashboard'}
             </h1>
-            <p className="text-white/60 text-xs">EzEarn Dashboard</p>
+            <p className="text-white/60 text-xs">BrandX Dashboard</p>
           </div>
         )}
       </button>
