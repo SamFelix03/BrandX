@@ -1,5 +1,9 @@
 # ENS Offchain Resolver & CCIP-Read Gateway
 
+<p align="center">
+<img width="1070" height="828" alt="image" src="https://github.com/user-attachments/assets/5bb15d4d-ce5b-468c-922d-4205a22fbe31" />
+</p>
+
 This document provides comprehensive technical documentation for BrandX's ENS offchain resolver implementation and CCIP-Read gateway server.
 
 ## Why Offchain Resolver is Required
