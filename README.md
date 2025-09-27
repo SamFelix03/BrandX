@@ -51,7 +51,7 @@ Unambiguous objectives not aligned with the actual customer sentiment may fail t
 
 ### Business Onboarding
 
-<img width="1225" height="530" alt="bizON" src="https://github.com/user-attachments/assets/dc9e7287-ed0f-4d2e-8947-16b40f57b84c" />
+<img width="1603" height="586" alt="businessonboarding" src="https://github.com/user-attachments/assets/6d3d5b63-29cf-4c9b-ae94-45ca1dbc9930" />
 
 1. **Initiation:** A business (e.g., `domain: business.eth`) begins the onboarding process.
 2. **Google Sign-in:** The business uses **Google Sign-in** to access the BrandX platform.
@@ -107,7 +107,7 @@ The **Bounty Generation Agent** takes the computed metrics via **A2A (Agent-to-A
 
 ### Customer Onboarding
 
-<img width="1028" height="756" alt="cuss" src="https://github.com/user-attachments/assets/aa664e63-0468-43e5-b69d-3c7c39fa3fef" />
+<img width="1228" height="826" alt="consumerflow" src="https://github.com/user-attachments/assets/c269174e-7bbf-46b6-af16-74060688d501" />
 
 BrandX's customer onboarding is designed to be **user-friendly**, blending **Web2 convenience** with **Web3 benefits**:
 
@@ -151,8 +151,217 @@ This immediately triggers the reward to be sent to the customer's address if it'
 
 ### Line of Code
 
-**Coming soon - ASI implementation details will be updated.**
+## Agent System Components
 
+The BrandX platform utilizes a sophisticated multi-agent system built on the `uagents` framework, with each agent specialized for specific tasks in the brand analysis and loyalty program ecosystem.
+
+### Core Agent Cluster
+
+#### [Orchestrator](Agents/Agent_Cluster/Orchestrator/)
+- **Main Code**: [`main.py`](Agents/Agent_Cluster/Orchestrator/main.py)
+- **Purpose**: Central coordinator that manages the entire brand research workflow
+- **Key Features**:
+  - FastAPI-based REST API server
+  - Sequential coordination of all specialized agents
+  - MeTTa Knowledge Graph integration for centralized data storage
+  - Polling mechanisms for asynchronous agent processing
+  - Brand research status tracking and management
+- **API Endpoints**:
+  - `POST /research-brand` - Start brand research asynchronously
+  - `GET /research-status` - Check research progress
+  - `POST /research-brand-sync` - Synchronous brand research
+  - `POST /kg/query_brand_data` - Query knowledge graph data
+  - `GET /kg/get_brand_summary` - Get comprehensive brand summary
+  - `GET /kg/get_all_brands` - List all analyzed brands
+
+#### [Web Search Agent](Agents/Agent_Cluster/Web_Search_Agent/)
+- **Main Code**: [`main.py`](Agents/Agent_Cluster/Web_Search_Agent/main.py)
+- **Purpose**: Comprehensive web research using Exa API
+- **Key Features**:
+  - ASI:One integration for intelligent search decisions
+  - Exa API integration for web research
+  - Polling mechanism for long-running searches
+  - REST API endpoint for brand research requests
+- **API Endpoints**:
+  - `POST /research/brand` - Perform web research for a brand
+
+#### [Positive Reviews Agent](Agents/Agent_Cluster/Positive_Reviews_Agent/)
+- **Main Code**: [`main.py`](Agents/Agent_Cluster/Positive_Reviews_Agent/main.py)
+- **Purpose**: Scrape and analyze positive customer reviews
+- **Key Features**:
+  - Reviews MCP Server integration
+  - ASI:One for intelligent tool usage
+  - Strict formatting for exact review quotes
+  - Focus on positive sentiment analysis
+- **API Endpoints**:
+  - `POST /reviews/positive` - Get positive reviews for a brand
+
+#### [Negative Reviews Agent](Agents/Agent_Cluster/Negative_Reviews_Agent/)
+- **Main Code**: [`main.py`](Agents/Agent_Cluster/Negative_Reviews_Agent/main.py)
+- **Purpose**: Scrape and analyze negative customer reviews
+- **Key Features**:
+  - Reviews MCP Server integration
+  - ASI:One for intelligent tool usage
+  - Strict formatting for exact negative review quotes
+  - Focus on areas of customer dissatisfaction
+- **API Endpoints**:
+  - `POST /reviews/negative` - Get negative reviews for a brand
+
+#### [Positive Reddit Agent](Agents/Agent_Cluster/Positive_Reddit_Agent/)
+- **Main Code**: [`main.py`](Agents/Agent_Cluster/Positive_Reddit_Agent/main.py)
+- **Purpose**: Gather positive Reddit discussions about brands
+- **Key Features**:
+  - Reddit MCP Server integration
+  - ASI:One for intelligent tool usage
+  - Single paragraph summaries of positive content
+  - Community sentiment analysis
+- **API Endpoints**:
+  - `POST /reddit/positive` - Get positive Reddit posts for a brand
+
+#### [Negative Reddit Agent](Agents/Agent_Cluster/Negative_Reddit_Agent/)
+- **Main Code**: [`main.py`](Agents/Agent_Cluster/Negative_Reddit_Agent/main.py)
+- **Purpose**: Gather negative Reddit discussions about brands
+- **Key Features**:
+  - Reddit MCP Server integration
+  - ASI:One for intelligent tool usage
+  - Single paragraph summaries of negative content
+  - Community complaint analysis
+- **API Endpoints**:
+  - `POST /reddit/negative` - Get negative Reddit posts for a brand
+
+#### [Positive Socials Agent](Agents/Agent_Cluster/Positive_Socials_Agent/)
+- **Main Code**: [`main.py`](Agents/Agent_Cluster/Positive_Socials_Agent/main.py)
+- **Purpose**: Gather positive social media sentiment (Instagram)
+- **Key Features**:
+  - Socials MCP Server integration
+  - ASI:One for intelligent tool usage
+  - Single paragraph summaries of positive social sentiment
+  - Instagram comment analysis
+- **API Endpoints**:
+  - `POST /social/positive` - Get positive social media comments for a brand
+
+#### [Negative Socials Agent](Agents/Agent_Cluster/Negative_Socials_Agent/)
+- **Main Code**: [`main.py`](Agents/Agent_Cluster/Negative_Socials_Agent/main.py)
+- **Purpose**: Gather negative social media sentiment (Instagram)
+- **Key Features**:
+  - Socials MCP Server integration
+  - ASI:One for intelligent tool usage
+  - Single paragraph summaries of negative social sentiment
+  - Brand issue identification
+- **API Endpoints**:
+  - `POST /social/negative` - Get negative social media comments for a brand
+
+### Specialized Agents
+
+#### [Metrics Generation Agent](Agents/Metrics_Generation_Agent/)
+- **Main Code**: [`agent.py`](Agents/Metrics_Generation_Agent/agent.py)
+- **Purpose**: Generate comprehensive brand metrics and KPIs
+- **Key Features**:
+  - MeTTa Knowledge Graph integration
+  - ASI:One AI reasoning for metrics generation
+  - Comprehensive brand health assessment
+  - A2A communication with Bounty Generation Agent
+  - Brand RAG system for data analysis
+- **Metrics Generated**:
+  - Sentiment metrics (overall, web, reviews, social)
+  - Reputation risk metrics (crisis severity, vulnerability)
+  - Market position metrics (competitive advantage, leadership)
+  - Customer experience metrics (satisfaction, advocacy)
+  - Performance indicators (health index, resilience)
+  - Strategic insights (improvement areas, urgency levels)
+- **API Endpoints**:
+  - `POST /brand/research` - Comprehensive brand research
+  - `POST /brand/query` - General brand queries
+  - `POST /brand/data` - Specific brand data queries
+  - `POST /brand/summary` - Brand summary requests
+  - `POST /brand/metrics` - Generate comprehensive metrics
+  - `GET /brands/all` - List all brands
+  - `GET /brand/metrics/last` - Get last generated metrics
+
+#### [Bounty Generation Agent](Agents/Bounty_Generation_Agent/)
+- **Main Code**: [`agent.py`](Agents/Bounty_Generation_Agent/agent.py)
+- **Purpose**: Generate actionable bounties based on brand analysis
+- **Key Features**:
+  - ASI:One AI reasoning for bounty creation
+  - A2A communication with Metrics Generation Agent
+  - Brand weakness analysis
+  - Automatic bounty generation upon receiving metrics
+  - Creative and actionable bounty suggestions
+- **Bounty Categories**:
+  - Social Media engagement
+  - Review generation
+  - Content creation
+  - Community building
+  - Product testing
+  - Brand advocacy
+- **API Endpoints**:
+  - `POST /bounty/generate` - Generate bounties for a brand
+  - `GET /metrics/received` - View received metrics data
+  - `GET /bounties/auto-generated` - Get auto-generated bounties
+  - `GET /bounties/auto-generated/{brand_name}` - Get bounties for specific brand
+
+#### [Verification Agent](Agents/Verification_Agent/)
+- **Main Code**: [`agent.py`](Agents/Verification_Agent/agent.py)
+- **Purpose**: Verify bounty completion through image analysis
+- **Key Features**:
+  - OpenAI GPT-4o Vision for image analysis
+  - Bounty verification system
+  - Image processing (base64 and URL support)
+  - Automated task completion verification
+  - Integration with Bounty Completion Server
+- **API Endpoints**:
+  - `POST /chat/image` - Image chat with bounty verification
+  - `POST /chat/text` - Text chat with optional image
+
+#### [Defendabot Agent](Agents/defendabot/)
+- **Main Code**: [`agent.py`](Agents/defendabot/agent.py)
+- **Purpose**: Generate positive defense tweets against negative sentiment
+- **Key Features**:
+  - ASI:One AI reasoning for tweet generation
+  - Twitter API integration
+  - Witty and engaging defense responses
+  - Character limit optimization (<150 characters)
+  - Automatic Twitter posting
+- **API Endpoints**:
+  - `POST /defend` - Generate and post defense tweets
+
+### MCP Servers (Model Context Protocol)
+
+#### [Reddit MCP Server](Agents/MCP_Severs/Reddit_MCP_Server/)
+- **Main Code**: [`main.py`](Agents/MCP_Severs/Reddit_MCP_Server/main.py)
+- **Purpose**: Scrape Reddit posts and discussions
+- **Key Features**:
+  - Exa API integration for Reddit research
+  - Multi-mode operation (HTTP API, MCP, or both)
+  - Comprehensive Reddit post analysis
+  - Sentiment-specific filtering (positive/negative)
+  - FastAPI-based HTTP endpoints
+- **API Endpoints**:
+  - `POST /scrape-reddit-posts` - Scrape Reddit posts with sentiment analysis
+
+#### [Reviews MCP Server](Agents/MCP_Severs/Reviews_MCP_Server/)
+- **Main Code**: [`main.py`](Agents/MCP_Severs/Reviews_MCP_Server/main.py)
+- **Purpose**: Scrape brand reviews from various platforms
+- **Key Features**:
+  - Exa API integration for review research
+  - Multi-mode operation (HTTP API, MCP, or both)
+  - Comprehensive review analysis
+  - Sentiment-specific filtering (positive/negative)
+  - Multiple review platform support
+- **API Endpoints**:
+  - `POST /scrape-reviews` - Scrape brand reviews with sentiment analysis
+
+#### [Socials MCP Server](Agents/MCP_Severs/Socials_MCP_Server/)
+- **Main Code**: [`main.py`](Agents/MCP_Severs/Socials_MCP_Server/main.py)
+- **Purpose**: Scrape Instagram comments from brand accounts
+- **Key Features**:
+  - Apify Client integration for Instagram scraping
+  - Multi-mode operation (HTTP API, MCP, or both)
+  - Instagram comment analysis
+  - Brand-specific account targeting
+  - Comprehensive social media data extraction
+- **API Endpoints**:
+  - `POST /scrape-social-comments` - Scrape Instagram comments from brand accounts
 
 ## Why ENS [and line of code]
 

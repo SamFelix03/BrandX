@@ -1,6 +1,20 @@
-# Brand Hero Smart Contracts Documentation
+# BrandX Smart Contracts Documentation
 
-**Factory Contract Address:** https://chain-20.evm-testnet-blockscout.chainweb.com/address/0x9bb2363810156f7b32b255677e8C1852AC1F95E6
+**Deployed Contract Addresses**
+
+1. **BrandXFactory Contract**
+   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/address/0x9bb2363810156f7b32b255677e8C1852AC1F95E6)
+   - Address: `0x9bb2363810156f7b32b255677e8C1852AC1F95E6`
+
+2. **Example Business Contract (Apple)**
+   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/address/0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a?tab=txs)
+   - Address: `0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a`
+
+3. **Example NFT Voucher for Loyalty Member**
+   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/token/0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a/instance/1)
+   - Token ID: `1`
+
+<img width="1266" height="682" alt="image" src="https://github.com/user-attachments/assets/3cf3b14e-9863-4d59-a67e-dd2b038706b1" />
 
 ## Why Kadena?
 
