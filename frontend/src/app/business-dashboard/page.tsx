@@ -610,6 +610,100 @@ export default function BusinessDashboard() {
             </div>
           )}
 
+            {activeTab === 'requests' && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-medium text-lg">Loyalty Program Requests</h3>
+                  <div className="text-white/60 text-sm">
+                    Pending: {loyaltyRequests.filter(r => r.status === 'pending').length}
+                  </div>
+                </div>
+                
+                {requestsLoading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white mx-auto mb-3"></div>
+                    <p className="text-white/70 text-sm">Loading requests...</p>
+                  </div>
+                ) : loyaltyRequests.length === 0 ? (
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-6 text-white/70">
+                    No loyalty program requests yet.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {loyaltyRequests.map((request) => (
+                      <div key={request.id} className="bg-white/5 rounded-lg p-6 border border-white/10">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="text-white font-medium">
+                                {request.consumer_ens_name || 'Anonymous User'}
+                              </h4>
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                                request.status === 'approved' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                                'bg-red-500/20 text-red-300 border border-red-500/30'
+                              }`}>
+                                {request.status.toUpperCase()}
+                              </span>
+                            </div>
+                            
+                            <div className="text-white/70 text-sm mb-3 font-mono">
+                              {request.consumer_wallet_address}
+                            </div>
+                            
+                            {request.consumer_message && (
+                              <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-3">
+                                <div className="text-white/60 text-xs mb-1">Message:</div>
+                                <div className="text-white/90 text-sm">{request.consumer_message}</div>
+                              </div>
+                            )}
+                            
+                            <div className="text-white/60 text-xs">
+                              Requested: {new Date(request.requested_at).toLocaleString()}
+                              {request.reviewed_at && (
+                                <span className="ml-4">
+                                  Reviewed: {new Date(request.reviewed_at).toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {request.rejection_reason && (
+                              <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                                <div className="text-red-300 text-xs mb-1">Rejection Reason:</div>
+                                <div className="text-red-200 text-sm">{request.rejection_reason}</div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {request.status === 'pending' && (
+                            <div className="flex items-center gap-2 ml-4">
+                              <button
+                                onClick={() => handleRequestAction(request.id, 'approved')}
+                                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const reason = prompt('Reason for rejection (optional):')
+                                  if (reason !== null) { // User didn't cancel
+                                    handleRequestAction(request.id, 'rejected', reason || undefined)
+                                  }
+                                }}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === 'profile' && (
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
             <h3 className="text-white font-medium text-lg mb-4">Business Information</h3>

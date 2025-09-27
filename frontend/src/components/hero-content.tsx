@@ -35,7 +35,10 @@ export default function HeroContent() {
           >
             For Businesses
           </button>
-          <button className="px-10 py-4 rounded-full bg-white text-black font-normal text-sm transition-all duration-200 hover:bg-white/90 cursor-pointer">
+          <button 
+            onClick={() => window.location.href = '/consumer-auth'}
+            className="px-10 py-4 rounded-full bg-white text-black font-normal text-sm transition-all duration-200 hover:bg-white/90 cursor-pointer"
+          >
             For Consumers
           </button>
         </div>
