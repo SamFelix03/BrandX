@@ -51,7 +51,7 @@ Unambiguous objectives not aligned with the actual customer sentiment may fail t
 
 ### Business Onboarding
 
-<img width="1225" height="530" alt="bizON" src="https://github.com/user-attachments/assets/dc9e7287-ed0f-4d2e-8947-16b40f57b84c" />
+<img width="1603" height="586" alt="businessonboarding" src="https://github.com/user-attachments/assets/6d3d5b63-29cf-4c9b-ae94-45ca1dbc9930" />
 
 1. **Initiation:** A business (e.g., `domain: business.eth`) begins the onboarding process.
 2. **Google Sign-in:** The business uses **Google Sign-in** to access the BrandX platform.
@@ -107,7 +107,7 @@ The **Bounty Generation Agent** takes the computed metrics via **A2A (Agent-to-A
 
 ### Customer Onboarding
 
-<img width="1028" height="756" alt="cuss" src="https://github.com/user-attachments/assets/aa664e63-0468-43e5-b69d-3c7c39fa3fef" />
+<img width="1228" height="826" alt="consumerflow" src="https://github.com/user-attachments/assets/c269174e-7bbf-46b6-af16-74060688d501" />
 
 BrandX's customer onboarding is designed to be **user-friendly**, blending **Web2 convenience** with **Web3 benefits**:
 
