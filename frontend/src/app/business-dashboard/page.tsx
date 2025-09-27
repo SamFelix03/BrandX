@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { REWARD_TEMPLATES, WEB2_REWARD_TEMPLATES } from '@/lib/constants'
 import BusinessGradientBackground from '../../components/business-gradient-background'
 import DashboardHeader from '../../components/dashboard-header'
+import { ENS_RESOLVER_ADDRESS } from '@/lib/constants'
 
 interface ContractBounty {
   id: string
@@ -252,7 +253,7 @@ export default function BusinessDashboard() {
             parentDomain: business.ens_domain,
             subdomain: profileData.profile.username,
             userAddress: request.consumer_wallet_address,
-            resolverAddress: "0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A"
+            resolverAddress: ENS_RESOLVER_ADDRESS
           })
         })
 

@@ -212,6 +212,7 @@ export default function ConsumerBusinessPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          consumer_ens_name: userProfile?.username,
           consumer_wallet_address: user.wallet.address,
           business_id: businessId,
           consumer_message: requestMessage.trim() || null
