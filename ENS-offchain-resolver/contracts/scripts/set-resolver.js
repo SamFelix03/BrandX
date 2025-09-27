@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
   // Get the deployed OffchainResolver address
-  const resolverAddress = "0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A";
+  const resolverAddress = "0x5824Ef215aC14955fD93e0C1E039596FDdb0514D";
   
   // Get the ENS Registry (it's already deployed on Sepolia)
   const ensRegistryAddress = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"; // Main ENS Registry

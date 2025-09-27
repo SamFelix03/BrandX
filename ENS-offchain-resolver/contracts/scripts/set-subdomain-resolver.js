@@ -4,7 +4,7 @@ async function main() {
   // Configuration
   const PARENT_DOMAIN = "fablelands.xyz"; // Change this to your parent domain
   const SUBDOMAIN = "alice"; // Change this to the subdomain you want to create
-  const RESOLVER_ADDRESS = "0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A"; // Your OffchainResolver
+  const RESOLVER_ADDRESS = "0x5824Ef215aC14955fD93e0C1E039596FDdb0514D"; // Your OffchainResolver
   const ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
   
   // Get the signer (must be the owner of the parent domain)

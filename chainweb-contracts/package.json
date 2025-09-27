@@ -1,8 +1,8 @@
 {
-    "name": "brandhero-platform",
+    "name": "brandx-platform",
     "scripts": {
         "build": "npx hardhat compile",
-        "deploy-brandhero": "npx hardhat compile && npx hardhat run scripts/deploy-brandhero.js --chainweb"
+        "deploy-brandx": "npx hardhat compile && npx hardhat run scripts/deploy-brandx.js --chainweb"
     },
     "devDependencies": {
         "@kadena/hardhat-chainweb": "^1.4.8",

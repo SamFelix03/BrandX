@@ -3,7 +3,7 @@ const { ethers } = require("ethers");
 async function main() {
   // Configuration
   const PRIVATE_KEY = "0x7a425200e31e8409c27abbc9aaae49a94c314426ef2e569d3a33ffc289a34e76";
-  const RESOLVER_ADDRESS = "0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A";
+  const RESOLVER_ADDRESS = "0x5824Ef215aC14955fD93e0C1E039596FDdb0514D";
   const DOMAIN_NAME = "yourdomain.eth"; // CHANGE THIS TO YOUR DOMAIN
   
   // Sepolia RPC

@@ -4,10 +4,10 @@ pragma solidity ^0.8.30;
 import "./BusinessContract.sol";
 
 /**
- * @title BrandHeroFactory - Factory contract for deploying individual business contracts
+ * @title BrandXFactory - Factory contract for deploying individual business contracts
  * @dev Central registry and deployment manager for all business contracts
  */
-contract BrandHeroFactory {
+contract BrandXFactory {
     
     // ==================== STRUCTS ====================
     

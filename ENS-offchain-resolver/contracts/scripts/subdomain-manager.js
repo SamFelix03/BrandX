@@ -164,8 +164,8 @@ async function main() {
   
   if (args.length < 1) {
     console.log("Usage examples:");
-    console.log("node subdomain-manager.js create fablelands.xyz alice 0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A");
-    console.log("node subdomain-manager.js batch fablelands.xyz alice,bob,charlie 0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A");
+    console.log("node subdomain-manager.js create fablelands.xyz alice 0x5824Ef215aC14955fD93e0C1E039596FDdb0514D");
+    console.log("node subdomain-manager.js batch fablelands.xyz alice,bob,charlie 0x5824Ef215aC14955fD93e0C1E039596FDdb0514D");
     console.log("node subdomain-manager.js info alice.fablelands.xyz");
     console.log("node subdomain-manager.js change alice.fablelands.xyz 0xNewResolverAddress");
     return;
