@@ -74,7 +74,6 @@ export default function ConsumerBusinessPage() {
   const [business, setBusiness] = useState<Business | null>(null)
   const [loyaltyRequest, setLoyaltyRequest] = useState<LoyaltyRequest | null>(null)
   const [bounties, setBounties] = useState<ContractBounty[]>([])
-  const [memberData, setMemberData] = useState<ContractMember | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -172,9 +171,10 @@ export default function ConsumerBusinessPage() {
         const businessRequest = data.requests.find((r: LoyaltyRequest) => r.business_id === businessId)
         setLoyaltyRequest(businessRequest || null)
         
-        // If approved, fetch member data from contract
-        if (businessRequest?.status === 'approved' && business?.smart_contract_address) {
-          fetchMemberData(business.smart_contract_address, wallet)
+        // If approved, redirect to dashboard
+        if (businessRequest?.status === 'approved') {
+          router.push(`/consumer/${businessId}/dashboard`)
+          return
         }
       }
     } catch (err) {
@@ -184,21 +184,6 @@ export default function ConsumerBusinessPage() {
     }
   }
 
-  const fetchMemberData = async (contractAddress: string, wallet: string) => {
-    try {
-      const response = await fetch(`/api/contract/members?contractAddress=${contractAddress}`)
-      const data = await response.json()
-      
-      if (response.ok) {
-        const member = data.members.find((m: ContractMember) => 
-          m.address.toLowerCase() === wallet.toLowerCase()
-        )
-        setMemberData(member || null)
-      }
-    } catch (err) {
-      console.error('Failed to fetch member data:', err)
-    }
-  }
 
   const handleJoinRequest = async () => {
     if (!user?.wallet?.address) {
@@ -337,7 +322,7 @@ export default function ConsumerBusinessPage() {
               
               <div className="flex-1">
                 <h1 className="text-3xl font-light text-white mb-2">
-                  <span className="font-medium italic instrument">{business.business_name}</span>
+                  <span className="font-medium">{business.business_name}</span>
                 </h1>
                 {business.description && (
                   <p className="text-white/70 mb-4 leading-relaxed">{business.description}</p>
@@ -378,15 +363,15 @@ export default function ConsumerBusinessPage() {
                 <div className="space-y-4">
                   <p className="text-white/70 mb-4">
                     {!userProfile 
-                      ? `Complete your EzEarn profile to join ${business.business_name}'s loyalty program.`
-                      : `Complete your EzEarn profile to join ${business.business_name}'s loyalty program.`
+                      ? `Complete your BrandX profile to join ${business.business_name}'s loyalty program.`
+                      : `Complete your BrandX profile to join ${business.business_name}'s loyalty program.`
                     }
                   </p>
                   <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
                     <p className="text-yellow-300 text-sm mb-3">
                       <strong>Profile Required:</strong> {!userProfile 
-                        ? 'You need to create your EzEarn profile with all required fields before joining loyalty programs.'
-                        : 'You need to complete all required fields in your EzEarn profile before joining loyalty programs.'
+                        ? 'You need to create your BrandX profile with all required fields before joining loyalty programs.'
+                        : 'You need to complete all required fields in your BrandX profile before joining loyalty programs.'
                       }
                     </p>
                     <button
@@ -467,81 +452,6 @@ export default function ConsumerBusinessPage() {
             </div>
           )}
 
-          {loyaltyRequest?.status === 'approved' && (
-            <div className="space-y-8">
-              {/* Member Dashboard */}
-              {memberData && (
-                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-8">
-                  <h2 className="text-2xl font-light text-white mb-4">
-                    Welcome to <span className="font-medium italic instrument">{business.business_name}</span>
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="text-center">
-                      <div className="text-3xl font-light text-white">{parseInt(memberData.totalPoints)}</div>
-                      <div className="text-white/60 text-sm">Total Points</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-light text-white">{memberData.completedBounties}</div>
-                      <div className="text-white/60 text-sm">Bounties Completed</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-light text-white">{memberData.ownedVouchers}</div>
-                      <div className="text-white/60 text-sm">Vouchers Owned</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-light text-white">{memberData.claimedPrizes}</div>
-                      <div className="text-white/60 text-sm">Prizes Claimed</div>
-                    </div>
-                  </div>
-                  {memberData.ensName && (
-                    <div className="mt-4 text-center">
-                      <div className="text-white/60 text-sm">Your ENS Name</div>
-                      <div className="text-white font-mono">{memberData.ensName}</div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Available Bounties */}
-              <div>
-                <h3 className="text-2xl font-light text-white mb-6">
-                  Available <span className="font-medium italic instrument">Bounties</span>
-                </h3>
-                
-                {bounties.length === 0 ? (
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-                    <p className="text-white/70">No bounties available at the moment.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {bounties.filter(b => b.isActive).map((bounty) => (
-                      <div key={bounty.id} className="bg-white/5 rounded-lg p-6 border border-white/10">
-                        <h4 className="text-white font-medium text-lg mb-3">{bounty.title}</h4>
-                        <p className="text-white/70 text-sm mb-4 leading-relaxed">{bounty.description}</p>
-                        
-                        <div className="space-y-2 text-xs">
-                          <div className="flex justify-between">
-                            <span className="text-white/60">Completions</span>
-                            <span className="text-white">{bounty.currentCompletions}/{bounty.maxCompletions}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-white/60">Expires</span>
-                            <span className="text-white">
-                              {isNaN(Number(bounty.expiry)) ? '—' : new Date(Number(bounty.expiry) * 1000).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <button className="w-full mt-4 px-4 py-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors text-sm font-medium">
-                          View Details
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </ShaderBackground>

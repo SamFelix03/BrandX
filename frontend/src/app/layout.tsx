@@ -22,7 +22,7 @@ const instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  title: "EzEarn",
+  title: "BrandX",
   description: "Loyalty Programs that Work.",
 }
 
