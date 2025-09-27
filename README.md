@@ -157,7 +157,7 @@ The BrandX platform utilizes a sophisticated multi-agent system built on the `ua
 
 ### Core Agent Cluster
 
-#### [Orchestrator Agent](Agents/Agent_Cluster/Orchestrator/)
+#### [Orchestrator](Agents/Agent_Cluster/Orchestrator/)
 - **Main Code**: [`main.py`](Agents/Agent_Cluster/Orchestrator/main.py)
 - **Purpose**: Central coordinator that manages the entire brand research workflow
 - **Key Features**:
