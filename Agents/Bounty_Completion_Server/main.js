@@ -2,6 +2,10 @@ import express from "express"
 import cors from "cors"
 import { createPublicClient, createWalletClient, http, decodeEventLog } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
+import dotenv from "dotenv"
+
+// Load environment variables
+dotenv.config()
 
 // --- KADENA CHAINWEB EVM TESTNET CONFIGURATION ---
 const KADENA_TESTNET_CHAIN = {
@@ -27,9 +31,16 @@ const KADENA_TESTNET_CHAIN = {
 }
 
 const RPC_URL = "https://evm-testnet.chainweb.com/chainweb/0.0/evm-testnet/chain/20/evm/rpc"
-const DEPLOYER_PRIVATE_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY
 const DEPLOYED_CONTRACT_ADDRESS = "0x97D559E2D0E543fD18Aa69AdE6429Dab7780d0C4"
 const PORT = process.env.PORT || 3000
+
+// Validate that private key is loaded from environment
+if (!DEPLOYER_PRIVATE_KEY) {
+  console.error("❌ DEPLOYER_PRIVATE_KEY not found in environment variables")
+  console.error("Please create a .env file with DEPLOYER_PRIVATE_KEY=your_private_key")
+  process.exit(1)
+}
 
 // Create Express app
 const app = express()
@@ -117,12 +128,12 @@ async function completeBounty(contractAddress, userAddress, bountyId) {
   // Setup clients for Kadena testnet
   const publicClient = createPublicClient({
     chain: KADENA_TESTNET_CHAIN,
-    transport: http(RPC_URL),
+    transport: http(),
   })
   const walletClient = createWalletClient({
     account,
     chain: KADENA_TESTNET_CHAIN,
-    transport: http(RPC_URL),
+    transport: http(),
   })
 
   // Check balance
