@@ -1,0 +1,10 @@
+uagents
+uagents-core
+openai
+python-dotenv
+Pillow
+fastapi
+uvicorn
+httpx
+pydantic
+regex
