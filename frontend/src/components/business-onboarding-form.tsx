@@ -7,9 +7,10 @@ import { useAuthStore } from '@/stores/auth-store'
 
 interface BusinessOnboardingFormProps {
   walletAddress: string
+  prefillDomain?: string
 }
 
-export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboardingFormProps) {
+export default function BusinessOnboardingForm({ walletAddress, prefillDomain }: BusinessOnboardingFormProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { logout } = usePrivy()
@@ -20,7 +21,7 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
     description: '',
     location: '',
     website: '',
-    ens_domain: '',
+    ens_domain: prefillDomain || '',
     social_links: {
       instagram: '',
       twitter: '',
@@ -35,9 +36,6 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [previewImage, setPreviewImage] = useState<string>('')
-  const [ensVerifying, setEnsVerifying] = useState(false)
-  const [ensError, setEnsError] = useState<string>('')
-  const [ensVerified, setEnsVerified] = useState(false)
   const [showWalletDropdown, setShowWalletDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -55,6 +53,16 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
     }
   }, [])
 
+  // Set prefillDomain when provided
+  useEffect(() => {
+    if (prefillDomain && prefillDomain !== formData.ens_domain) {
+      setFormData(prev => ({
+        ...prev,
+        ens_domain: prefillDomain
+      }))
+    }
+  }, [prefillDomain])
+
   const formatWalletAddress = (address: string) => {
     if (!address) return ''
     return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -65,44 +73,6 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
     setShowWalletDropdown(false)
   }
 
-  const verifyEnsOwnership = async (domain: string) => {
-    if (!domain.trim()) {
-      setEnsError('')
-      setEnsVerified(false)
-      return
-    }
-
-    setEnsVerifying(true)
-    setEnsError('')
-    setEnsVerified(false)
-
-    try {
-      const response = await fetch('/api/verify-ens', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ens_domain: domain,
-          wallet_address: walletAddress
-        })
-      })
-
-      const result = await response.json()
-      console.log('ENS verification response:', result)
-      
-      if (result.success) {
-        setEnsVerified(true)
-        setEnsError('')
-      } else {
-        setEnsError(result.error || 'ENS verification failed')
-        setEnsVerified(false)
-      }
-    } catch (error) {
-      setEnsError('Failed to verify ENS domain')
-      setEnsVerified(false)
-    } finally {
-      setEnsVerifying(false)
-    }
-  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
@@ -127,12 +97,6 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
         ...prev,
         [name]: value
       }))
-
-      // Reset ENS verification state when domain changes
-      if (name === 'ens_domain') {
-        setEnsError('')
-        setEnsVerified(false)
-      }
     }
   }
 
@@ -320,44 +284,16 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
                   value={formData.ens_domain}
                   onChange={handleInputChange}
                   required
-                  className={`w-full px-4 py-3 pr-20 bg-white/10 border rounded-lg text-white placeholder-white/60 focus:outline-none ${
-                    ensError ? 'border-red-500' : ensVerified ? 'border-green-500' : 'border-white/30 focus:border-white/50'
-                  }`}
+                  className="w-full px-4 py-3 bg-white/10 border border-green-500 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-green-400"
                   placeholder="yourname.eth"
                 />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => verifyEnsOwnership(formData.ens_domain)}
-                    disabled={!formData.ens_domain.trim() || ensVerifying}
-                    className="px-2 py-1 text-xs bg-white/20 hover:bg-white/30 disabled:bg-white/10 text-white disabled:text-white/50 rounded transition-colors disabled:cursor-not-allowed"
-                  >
-                    {ensVerifying ? 'Verifying...' : 'Verify'}
-                  </button>
-                  {ensVerifying && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  )}
-                  {!ensVerifying && ensVerified && (
-                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  {!ensVerifying && ensError && (
-                    <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  )}
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
                 </div>
               </div>
-              {ensError && (
-                <p className="text-red-400 text-xs mt-2">{ensError}</p>
-              )}
-              {ensVerified && (
-                <p className="text-green-400 text-xs mt-2">✅ ENS verified</p>
-              )}
-              <p className="text-white/50 text-xs mt-1">
-                Your ENS domain must resolve to your connected wallet
-              </p>
+              <p className="text-green-400 text-xs mt-2">✅ Domain verified in previous step</p>
             </div>
           </div>
         </div>
@@ -502,19 +438,12 @@ export default function BusinessOnboardingForm({ walletAddress }: BusinessOnboar
           disabled={
             isSubmitting || 
             !formData.business_name || 
-            !formData.ens_domain ||
-            !ensVerified ||
-            ensVerifying
+            !formData.ens_domain
           }
           className="w-full px-8 py-4 bg-white text-black rounded-lg font-medium text-lg transition-all duration-200 hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Creating Your Profile...' : 'Continue to BrandHero Setup'}
+          {isSubmitting ? 'Creating Your Profile...' : 'Continue to BrandX Setup'}
         </button>
-        {(!formData.ens_domain || !ensVerified) && !ensVerifying && (
-          <p className="text-amber-400 text-sm mt-2 text-center">
-            Please enter and verify your ENS domain ownership before continuing
-          </p>
-        )}
       </div>
     </form>
     </div>

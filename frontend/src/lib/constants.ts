@@ -1,6 +1,6 @@
 // Contract addresses - these would be updated after deployment
 export const CONTRACT_ADDRESSES = {
-  FACTORY: "0x05c2b693426b7fDeC2cF4fE17B4e2Cab6B24921c",
+  FACTORY: "0x9bb2363810156f7b32b255677e8C1852AC1F95E6", // BrandXFactory deployed on Chainweb EVM Testnet 20 Testnet
   // Individual business contract addresses will be stored in database
 } as const
 
@@ -384,9 +384,9 @@ export const BUSINESS_CONTRACT_ABI = [
 
 // Network configuration
 export const NETWORK_CONFIG = {
-  chainId: 421614, // Arbitrum Sepolia testnet
-  rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc", // Arbitrum Sepolia RPC
-  blockExplorer: "https://sepolia.arbiscan.io"
+  chainId: 5920, // Chainweb EVM Testnet 20
+  rpcUrl: "https://evm-testnet.chainweb.com/chainweb/0.0/evm-testnet/chain/20/evm/rpc", // Chainweb EVM Testnet 20 RPC
+  blockExplorer: "https://chain-20.evm-testnet-blockscout.chainweb.com"
 } as const
 
 // Web2 reward templates (available to all businesses)
