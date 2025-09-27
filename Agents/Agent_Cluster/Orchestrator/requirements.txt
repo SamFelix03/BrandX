@@ -1,0 +1,8 @@
+fastapi 
+uvicorn 
+httpx 
+hyperon>=0.2.6 
+pyngrok 
+nest_asyncio
+uuid
+typing
