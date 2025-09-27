@@ -1,4 +1,4 @@
-# Brand Hero Smart Contracts Documentation
+# BrandX Smart Contracts Documentation
 
 **Deployed Contract Addresses**
 
