@@ -293,19 +293,6 @@ REDDIT_MCP=https://redditmcp-739298578243.us-central1.run.app/scrape-reddit-post
 # Final response generation  
 "model": "asi1-extended"    # Comprehensive paragraph generation
 ```
-
----
-
-## Key Differentiators
-
-### vs. Other Reddit Tools
-| Feature | This Agent | Generic Reddit Tools |
-|---------|------------|---------------------|
-| **AI Intelligence** | Smart query decision making | Manual search only |
-| **Sentiment Filter** | Negative-focused analysis | All content mixed |
-| **Output Format** | Paragraph summaries | Raw post lists |
-| **Integration** | uAgents + ASI:One powered | Standalone tools |
-
 ---
 
 ## Response Examples
