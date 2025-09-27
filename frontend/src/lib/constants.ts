@@ -1,10 +1,10 @@
 // Contract addresses - these would be updated after deployment
 export const CONTRACT_ADDRESSES = {
-  FACTORY: "0x05c2b693426b7fDeC2cF4fE17B4e2Cab6B24921c", // Deployed on Arbitrum Sepolia Testnet
+  FACTORY: "0x05c2b693426b7fDeC2cF4fE17B4e2Cab6B24921c",
   // Individual business contract addresses will be stored in database
 } as const
 
-export const ENS_RESOLVER_ADDRESS = "0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A"
+export const ENS_RESOLVER_ADDRESS = "0x5824Ef215aC14955fD93e0C1E039596FDdb0514D"
 // Reward types mapping to contract enums
 export const REWARD_TYPES = {
   NONE: 0,
