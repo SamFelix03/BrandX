@@ -182,7 +182,7 @@ Members can use their ENS subdomain across any ENS-compatible application while 
 - [GitHub File Link](https://github.com/SamFelix03/BrandX/blob/main/ENS-offchain-resolver/contracts/contracts/OffchainResolver.sol)
 
 **CCIP-Read Gateway**
-- [Hosted Link](https://ccip-read-gateway.onrender.com)
+- Hosted Link: [https://ccip-read-gateway.onrender.com](https://ccip-read-gateway.onrender.com)
 - [Server Implementation](https://github.com/SamFelix03/BrandX/tree/main/ENS-offchain-resolver/ccip-read-gateway/src)
 
 **Documentation**
