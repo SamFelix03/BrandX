@@ -7,9 +7,9 @@ A place where businesses could simply hop in to grow their brands.
 - [The Solution](#the-solution)
 - [What We Solve](#what-we-solve)
 - [Product Flow](#product-flow)
-- [Why Artificial Super Intelligence](#why-artificial-super-intelligence)
-- [Why ENS](#why-ens)
-- [Why Kadena](#why-kadena)
+- [Why Artificial Super Intelligence [and line of code]](#why-artificial-super-intelligence-and-line-of-code)
+- [Why ENS [and line of code]](#why-ens-and-line-of-code)
+- [Why Kadena [and line of code]](#why-kadena-and-line-of-code)
 - [Additional Features](#additional-features)
 - [GTM](#gtm)
 - [Roadmap](#roadmap)
@@ -130,7 +130,7 @@ Once onboarded, customers can actively participate in **bounties** and earn **re
    - **Verified Proof:** If successfully verified, the process continues to reward assignment.
 4. **On-Chain Reward Assignment:** Upon successful verification, the system adds points and assigns rewards **ON CHAIN**, ensuring transparent and immutable reward distribution on the blockchain.
 
-## Why Artificial Super Intelligence
+## Why Artificial Super Intelligence [and line of code]
 
 We use a cluster of 8 AI agents following the uagents framework, and registered on Agentverse which use 3 MCP servers for brand analysis which perform the following tasks:
 
@@ -149,8 +149,12 @@ This could help the brands take decisions based on which bounties they want to g
 
 This immediately triggers the reward to be sent to the customer's address if it's an on-chain company, or if it's an off-chain company, customers could claim their off-chain reward by visiting the retailer directly. ASI makes it possible for us to build a customized, objective-driven loyalty program for every brand we on-board and make brands actually focus on growth.
 
+### Line of Code
 
-## Why ENS?
+**Coming soon - ASI implementation details will be updated.**
+
+
+## Why ENS [and line of code]
 
 ENS serves as the layer of trust and identity in BrandX's loyalty program ecosystem, addressing two critical challenges in the Web3 business landscape:
 
@@ -170,7 +174,24 @@ Through our custom offchain resolver (/src/app/api/ens/mint-subdomain/route.ts, 
 
 Members can use their ENS subdomain across any ENS-compatible application while maintaining their BrandX identity and loyalty standing. This portability and interoperability transforms traditional siloed loyalty programs into an open, interconnected ecosystem where member identity transcends individual platforms.
 
-## Why Kadena
+### Line of Code
+
+**Offchain/L2 Resolver Contract**
+- [Explorer Link](https://github.com/SamFelix03/BrandX/blob/main/ENS-offchain-resolver/contracts/contracts/OffchainResolver.sol)
+- [GitHub File Link](https://github.com/SamFelix03/BrandX/blob/main/ENS-offchain-resolver/contracts/contracts/OffchainResolver.sol)
+
+**CCIP-Read Gateway**
+- [Hosted Link](https://ccip-read-gateway.onrender.com)
+- [Server Implementation](https://github.com/SamFelix03/BrandX/tree/main/ENS-offchain-resolver/ccip-read-gateway/src)
+
+**Documentation**
+- [Resolver and Gateway Docs](https://github.com/SamFelix03/BrandX/blob/main/ENS-offchain-resolver/README.md)
+
+**ENS Client API Routes**
+- [API Routes](https://github.com/SamFelix03/BrandX/tree/main/frontend/src/app/api/ens)
+- [Client Documentation](https://github.com/SamFelix03/BrandX/blob/main/frontend/src/app/api/ens/README.md)
+
+## Why Kadena [and line of code]
 
 Kadena is the backbone that makes BrandX possible. Every time a business sets up their loyalty program through BrandX, we use a Business Factory Contract deployed on Kadena to spin up a dedicated smart contract exclusively for that business. This ensures that all bounty details, enrolled members, task completions, and reward claims are transparent, tamper-proof, and verifiable on-chain. It acts as a trust layer of our platform. By deploying each business's loyalty logic as an isolated contract, we guarantee scalability and security without data conflicts.
 
@@ -179,6 +200,31 @@ Our Smart contracts act as a legal agreement between the business and all its lo
 On top of that, Kadena's ecosystem provides the NFT infrastructure we use to mint bounty completion tokens for members. These NFTs act as proof of participation and bounty completion, and the contracts also handle token transfers for token airdrop type rewards.
 
 Basically, our platform is a very good use case for Kadena's RWA tokenization goals, by issuing both ERC721 (NFT) with all the voucher metadata for claiming web2 based bounty rewards and also supporting token airdrops for web3 based rewards.
+
+### Line of Code
+
+**BrandXFactory Contract**
+- [GitHub Contract File](https://github.com/SamFelix03/BrandX/blob/main/chainweb-contracts/contracts/BrandXFactory.sol)
+
+**BusinessContract Logic**
+- [GitHub Contract File](https://github.com/SamFelix03/BrandX/blob/main/chainweb-contracts/contracts/BusinessContract.sol)
+
+**Smart Contract Documentation**
+- [Detailed Documentation](https://github.com/SamFelix03/BrandX/blob/main/chainweb-contracts/README.md)
+
+**Deployed Contract Addresses**
+
+1. **BrandXFactory Contract**
+   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/address/0x9bb2363810156f7b32b255677e8C1852AC1F95E6)
+   - Address: `0x9bb2363810156f7b32b255677e8C1852AC1F95E6`
+
+2. **Example Business Contract (Apple)**
+   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/address/0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a?tab=txs)
+   - Address: `0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a`
+
+3. **Example NFT Voucher for Loyalty Member**
+   - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/token/0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a/instance/1)
+   - Token ID: `1`
 
 ## NFT Issuance and Token Transfers for RWA Tokenization
 

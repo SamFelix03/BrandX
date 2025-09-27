@@ -67,6 +67,12 @@ export async function GET(request: NextRequest) {
     let ethAddress = await resolver.getAddress();
     let content = await resolver.getContentHash();
     let email = await resolver.getText('email');
+    let avatar = await resolver.getAvatar();
+    let description = await resolver.getText('description');
+    let url = await resolver.getText('url');
+    let discord = await resolver.getText('com.discord');
+    let github = await resolver.getText('com.github');
+    let twitter = await resolver.getText('com.twitter');
 
     const results = {
       name,
@@ -77,6 +83,12 @@ export async function GET(request: NextRequest) {
       ethAddress,
       content,
       email,
+      avatar,
+      description,
+      url,
+      discord,
+      github,
+      twitter,
       metadata: {
         timestamp: new Date().toISOString(),
         ensRegistry: ENS_REGISTRY_ADDRESS

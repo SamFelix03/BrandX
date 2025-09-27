@@ -6,11 +6,17 @@ import { useAuthStore } from '@/stores/auth-store'
 import ShaderBackground from '../../components/shader-background'
 import DashboardHeader from '../../components/dashboard-header'
 import BountyManagementForm from '../../components/bounty-management-form'
+import BrandAnalysisTab from '../../components/brand-analysis-tab'
 
 export default function BountyManagement() {
   const router = useRouter()
   const { authenticated, user, business, businessLoading } = useAuthStore()
   const [loading, setLoading] = useState(true)
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false)
+  const [editingBounty, setEditingBounty] = useState(false)
+  const [editingPrize, setEditingPrize] = useState(false)
+  const [selectedBountyIndices, setSelectedBountyIndices] = useState<Set<number>>(new Set())
+  const anyModalOpen = showAnalysisModal || editingBounty || editingPrize
 
   useEffect(() => {
     // Check if user should be on this page
@@ -47,7 +53,7 @@ export default function BountyManagement() {
   return (
     <ShaderBackground>
       <DashboardHeader business={business} />
-      <main className="absolute top-20 left-0 right-0 bottom-0 z-20 p-8 overflow-y-auto">
+      <main className={`absolute top-20 left-0 right-0 bottom-0 ${anyModalOpen ? 'z-40' : 'z-20'} p-8 overflow-y-auto`}>
         <div className="max-w-6xl mx-auto">
           
           {/* Header Section */}
@@ -70,15 +76,32 @@ export default function BountyManagement() {
               </div>
               <div className="text-right">
                 <div className="text-white/70 text-sm">ENS Domain</div>
-                <div className="text-white font-mono">{business.ens_domain || "Not set"}</div>
+                <div className="text-white font-medium">{business.ens_domain || "Not set"}</div>
               </div>
             </div>
           </div>
 
-          {/* Bounty Management Form */}
+          {/* Analysis Section - Top Half */}
+          <div className="mb-8">
+            <BrandAnalysisTab 
+              businessId={business.id} 
+              walletAddress={user?.wallet?.address}
+              selectedBountyIndices={selectedBountyIndices}
+            />
+          </div>
+
+          {/* Bounty Management Form - Bottom Half */}
           <BountyManagementForm 
             business={business}
             walletAddress={user?.wallet?.address || ''}
+            showAnalysisModal={showAnalysisModal}
+            setShowAnalysisModal={setShowAnalysisModal}
+            editingBounty={editingBounty}
+            setEditingBounty={setEditingBounty}
+            editingPrize={editingPrize}
+            setEditingPrize={setEditingPrize}
+            selectedBountyIndices={selectedBountyIndices}
+            setSelectedBountyIndices={setSelectedBountyIndices}
           />
         </div>
       </main>

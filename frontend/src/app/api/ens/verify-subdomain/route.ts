@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       try {
         const receipt = await publicClient.waitForTransactionReceipt({ 
           hash: transactionHash as `0x${string}`,
-          timeout: 60_000
+          timeout: 240_000
         })
         console.log('Transaction confirmed:', receipt.transactionHash)
       } catch (error) {

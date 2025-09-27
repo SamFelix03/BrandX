@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createWalletClient, http, createPublicClient } from 'viem'
-import { arbitrumSepolia } from 'viem/chains'
+import { chainwebEvmTestnet } from '@/lib/chains'
 import { privateKeyToAccount } from 'viem/accounts'
-import { BUSINESS_CONTRACT_ABI, NETWORK_CONFIG } from '@/lib/constants'
+import { BUSINESS_CONTRACT_ABI } from '@/lib/constants'
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,14 +26,14 @@ export async function POST(request: NextRequest) {
     const account = privateKeyToAccount(privateKey as `0x${string}`)
     
     const publicClient = createPublicClient({
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
     
     const walletClient = createWalletClient({
       account,
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     console.log('Adding member to contract:', contractAddress)
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     // Wait for transaction confirmation
     const receipt = await publicClient.waitForTransactionReceipt({ 
       hash,
-      timeout: 60_000
+      timeout: 240_000
     })
 
     console.log('Add member transaction confirmed:', receipt.transactionHash)
