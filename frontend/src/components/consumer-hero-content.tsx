@@ -17,7 +17,7 @@ export default function ConsumerHeroContent() {
   }
 
   return (
-    <main className="absolute inset-0 flex items-center justify-center z-20">
+    <main className="absolute inset-0 flex items-center justify-center">
       <div className="text-center max-w-4xl px-8">
 
         {/* Main CTA */}

@@ -91,6 +91,7 @@ export default function BusinessDashboard() {
   const [loyaltyRequests, setLoyaltyRequests] = useState<LoyaltyRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [requestsLoading, setRequestsLoading] = useState(false)
+  const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set())
   
   // Modal states
   const [showAddBounty, setShowAddBounty] = useState(false)
@@ -205,9 +206,220 @@ export default function BusinessDashboard() {
   }
 
   const handleRequestAction = async (requestId: string, action: 'approved' | 'rejected', rejectionReason?: string) => {
-    if (!user?.wallet?.address) return
+    if (!user?.wallet?.address || !business?.smart_contract_address) return
+    
+    // Add request to processing set
+    setProcessingRequests(prev => new Set(prev).add(requestId))
     
     try {
+      if (action === 'approved') {
+        // Find the request to get consumer details
+        const request = loyaltyRequests.find(r => r.id === requestId)
+        if (!request) {
+          alert('Request not found')
+          return
+        }
+
+        // Step 1: Fetch user profile to get username
+        console.log('Fetching user profile for username...')
+        
+        const profileResponse = await fetch(`/api/user-profiles?wallet_address=${request.consumer_wallet_address}`)
+        const profileData = await profileResponse.json()
+        
+        if (!profileResponse.ok || !profileData.profile?.username) {
+          alert('User profile or username not found. User must complete their profile first.')
+          return
+        }
+        
+        if (!business.ens_domain) {
+          alert('Business ENS domain is required for member approval')
+          return
+        }
+        
+        // Step 2: Generate ENS name from username and business domain
+        const { generateENSSubdomain } = await import('@/lib/ens-utils')
+        const ensName = generateENSSubdomain(profileData.profile.username, business.ens_domain)
+        
+        console.log(`Generated ENS name: ${ensName} for address: ${request.consumer_wallet_address}`)
+        
+        // Step 3: First, prepare ENS subdomain minting transaction
+        console.log('Preparing ENS subdomain minting...')
+        
+        const ensResponse = await fetch('/api/ens/mint-subdomain', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            parentDomain: business.ens_domain,
+            subdomain: profileData.profile.username,
+            userAddress: request.consumer_wallet_address,
+            resolverAddress: "0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A"
+          })
+        })
+
+        const ensData = await ensResponse.json()
+        
+        if (!ensResponse.ok) {
+          console.error('ENS preparation error:', ensData)
+          alert(`Failed to prepare ENS subdomain: ${ensData.error}`)
+          return
+        }
+
+        // Step 4: Execute ENS transaction using connected wallet
+        console.log('Executing ENS transaction with connected wallet...')
+        
+        try {
+          // Import wallet client utilities
+          const { createWalletClient, custom } = await import('viem')
+          const { sepolia } = await import('viem/chains')
+          
+          // Get the Privy wallet provider
+          if (!user.wallet?.walletClientType) {
+            alert('Please connect your wallet to mint ENS subdomains')
+            return
+          }
+
+          // Check if window.ethereum is available
+          if (typeof window === 'undefined' || !window.ethereum) {
+            alert('Ethereum provider not found. Please make sure your wallet is connected.')
+            return
+          }
+
+          // Check current chain and switch to Sepolia if needed
+          const ethereum = window.ethereum as any
+          const currentChainId = await ethereum.request({ method: 'eth_chainId' })
+          const sepoliaChainId = '0x' + sepolia.id.toString(16) // Convert 11155111 to hex: 0xaa36a7
+          
+          console.log('Current chain ID:', currentChainId)
+          console.log('Required chain ID (Sepolia):', sepoliaChainId)
+          
+          if (currentChainId !== sepoliaChainId) {
+            console.log('Wrong network detected. Switching to Sepolia...')
+            
+            try {
+              // Try to switch to Sepolia
+              await ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: sepoliaChainId }],
+              })
+              
+              console.log('Successfully switched to Sepolia')
+            } catch (switchError: any) {
+              console.error('Failed to switch to Sepolia:', switchError)
+              
+              // If the chain hasn't been added to the user's wallet, add it
+              if (switchError.code === 4902) {
+                try {
+                  await ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [
+                      {
+                        chainId: sepoliaChainId,
+                        chainName: 'Sepolia Testnet',
+                        rpcUrls: ['https://sepolia.infura.io/v3/'],
+                        nativeCurrency: {
+                          name: 'ETH',
+                          symbol: 'ETH',
+                          decimals: 18,
+                        },
+                        blockExplorerUrls: ['https://sepolia.etherscan.io'],
+                      },
+                    ],
+                  })
+                  console.log('Successfully added and switched to Sepolia')
+                } catch (addError) {
+                  console.error('Failed to add Sepolia network:', addError)
+                  alert('Please manually switch your wallet to Sepolia testnet to mint ENS subdomains')
+                  return
+                }
+              } else {
+                alert('Please switch your wallet to Sepolia testnet to mint ENS subdomains')
+                return
+              }
+            }
+          }
+
+          // Create wallet client with Privy provider (after ensuring we're on Sepolia)
+          const walletClient = createWalletClient({
+            chain: sepolia,
+            transport: custom(window.ethereum as any),
+            account: user.wallet.address as `0x${string}`
+          })
+
+          // Execute the ENS transaction
+          const hash = await walletClient.writeContract({
+            address: ensData.transactionData.to as `0x${string}`,
+            abi: ensData.transactionData.abi,
+            functionName: ensData.transactionData.functionName,
+            args: ensData.transactionData.args
+          })
+
+          console.log('ENS transaction hash:', hash)
+
+          // Step 5: Verify ENS subdomain was created
+          console.log('Verifying ENS subdomain...')
+          
+          const verifyResponse = await fetch('/api/ens/verify-subdomain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fullSubdomain: ensData.verificationData.fullSubdomain,
+              expectedOwner: ensData.verificationData.expectedOwner,
+              expectedResolver: ensData.verificationData.expectedResolver,
+              transactionHash: hash
+            })
+          })
+
+          const verifyData = await verifyResponse.json()
+          
+          if (!verifyResponse.ok || !verifyData.verified) {
+            console.error('ENS verification failed:', verifyData)
+            alert(`ENS subdomain creation failed verification: ${verifyData.message}`)
+            return
+          }
+
+          console.log('ENS subdomain verified successfully:', verifyData.subdomain)
+          
+        } catch (ensError: any) {
+          console.error('ENS transaction failed:', ensError)
+          alert(`Failed to mint ENS subdomain: ${ensError.message || 'Transaction failed'}`)
+          return
+        }
+        
+        // Step 6: Only after successful ENS minting, add member to contract
+        console.log('Adding member to contract...')
+        
+        const contractResponse = await fetch('/api/contract/add-member', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contractAddress: business.smart_contract_address,
+            userAddress: request.consumer_wallet_address,
+            ensName: ensName
+          })
+        })
+
+        const contractData = await contractResponse.json()
+        
+        if (!contractResponse.ok) {
+          // Check if the error is because user is already a member
+          if (contractData.error?.includes('already a loyalty member') || 
+              contractData.error?.includes('Member exists')) {
+            console.log('User is already a member, proceeding to update database...')
+            // Continue to database update - this handles the case where contract succeeded
+            // but database update failed previously
+          } else {
+            console.error('Contract error:', contractData)
+            alert(`Failed to add member to contract: ${contractData.error}`)
+            return
+          }
+        } else {
+          console.log('Member added to contract successfully:', contractData.transactionHash)
+        }
+        
+        // Step 7: Update database record (after successful ENS + contract operations)
+        console.log('Updating database record...')
+      }
+
       const response = await fetch('/api/loyalty-requests/business', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -222,15 +434,35 @@ export default function BusinessDashboard() {
       const data = await response.json()
       
       if (response.ok) {
-        // Refresh requests
-        await fetchLoyaltyRequests()
-        alert(`Request ${action} successfully`)
+        // Refresh requests and contract data
+        await Promise.all([
+          fetchLoyaltyRequests(),
+          action === 'approved' ? fetchContractData() : Promise.resolve() // Only refresh contract data on approval
+        ])
+        
+        if (action === 'approved') {
+          const request = loyaltyRequests.find(r => r.id === requestId)
+          const profileResponse = await fetch(`/api/user-profiles?wallet_address=${request?.consumer_wallet_address}`)
+          const profileData = await profileResponse.json()
+          const username = profileData.profile?.username || 'user'
+          
+          alert(`Request approved successfully! ENS subdomain ${username}.${business.ens_domain} minted and member added to loyalty program.`)
+        } else {
+          alert(`Request ${action} successfully`)
+        }
       } else {
         alert(data.error || `Failed to ${action} request`)
       }
     } catch (error) {
       console.error(`Error ${action} request:`, error)
       alert(`Failed to ${action} request`)
+    } finally {
+      // Remove request from processing set
+      setProcessingRequests(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(requestId)
+        return newSet
+      })
     }
   }
 
@@ -677,23 +909,32 @@ export default function BusinessDashboard() {
                           
                           {request.status === 'pending' && (
                             <div className="flex items-center gap-2 ml-4">
-                              <button
-                                onClick={() => handleRequestAction(request.id, 'approved')}
-                                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => {
-                                  const reason = prompt('Reason for rejection (optional):')
-                                  if (reason !== null) { // User didn't cancel
-                                    handleRequestAction(request.id, 'rejected', reason || undefined)
-                                  }
-                                }}
-                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
-                              >
-                                Reject
-                              </button>
+                              {processingRequests.has(request.id) ? (
+                                <div className="flex items-center gap-2 text-white/70 text-sm">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white/70"></div>
+                                  <span>Processing...</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleRequestAction(request.id, 'approved')}
+                                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const reason = prompt('Reason for rejection (optional):')
+                                      if (reason !== null) { // User didn't cancel
+                                        handleRequestAction(request.id, 'rejected', reason || undefined)
+                                      }
+                                    }}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
