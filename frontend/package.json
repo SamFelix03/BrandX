@@ -12,6 +12,7 @@
     "@paper-design/shaders-react": "^0.0.52",
     "@privy-io/react-auth": "^2.24.0",
     "@supabase/supabase-js": "^2.57.4",
+    "ethers": "^5.7.2",
     "framer-motion": "^12.23.12",
     "geist": "^1.5.1",
     "next": "15.5.3",

@@ -209,6 +209,32 @@ export const BUSINESS_CONTRACT_ABI = [
     "type": "function"
   },
   
+  // Loyalty Member Management
+  {
+    "inputs": [
+      { "name": "_user", "type": "address" },
+      { "name": "_ensName", "type": "string" }
+    ],
+    "name": "addLoyaltyMember",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "name": "", "type": "address" }],
+    "name": "loyaltyMembers",
+    "outputs": [{ "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "name": "_ensName", "type": "string" }],
+    "name": "isENSNameAvailable",
+    "outputs": [{ "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  
   // Events
   {
     "inputs": [

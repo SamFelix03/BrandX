@@ -7,6 +7,7 @@ interface Business {
   description?: string
   location?: string
   website?: string
+  ens_domain?: string
   profile_picture_url?: string
   smart_contract_address?: string
   is_token_issuer: boolean
