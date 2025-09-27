@@ -26,7 +26,7 @@ The offchain resolver pattern allows ENS names to resolve data from external sou
 
 ## Offchain Resolver Contract
 
-**Deployed Address**: `0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A` (Ethereum Sepolia)
+**Deployed Address**: [`0x5824Ef215aC14955fD93e0C1E039596FDdb0514D` (Ethereum Sepolia)](https://sepolia.etherscan.io/address/0x5824Ef215aC14955fD93e0C1E039596FDdb0514D)
 
 ### Contract Architecture
 

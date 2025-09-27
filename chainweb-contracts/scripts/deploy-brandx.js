@@ -8,15 +8,15 @@ async function main() {
   await chainweb.switchChain(chains[0]);
   const [deployer] = await ethers.getSigners();
   
-  console.log(`Deploying BrandHero contracts with deployer account: ${deployer.address} on network: ${network.name}`);
+  console.log(`Deploying BrandX contracts with deployer account: ${deployer.address} on network: ${network.name}`);
   console.log('========================================');
 
   try {
-    // Deploy BrandHeroFactory
-    console.log('🏭 Deploying BrandHeroFactory...');
+    // Deploy BrandXFactory
+    console.log('🏭 Deploying BrandXFactory...');
     
     const deployed = await chainweb.deployContractOnChains({
-      name: 'BrandHeroFactory',
+      name: 'BrandXFactory',
       constructorArgs: [], // Factory has no constructor parameters
     });
 
@@ -25,47 +25,12 @@ async function main() {
       return;
     }
 
-    console.log('✅ BrandHeroFactory deployed successfully:');
+    console.log('✅ BrandXFactory deployed successfully:');
     deployed.deployments.forEach((deployment) => {
       console.log(`   Chain ${deployment.chain}: ${deployment.address}`);
     });
     console.log('');
 
-    // Test factory by deploying a sample business contract
-    console.log('🏪 Testing factory with sample business deployment...');
-    
-    // Switch to first chain and get factory instance
-    await chainweb.switchChain(chains[0]);
-    const BrandHeroFactory = await ethers.getContractFactory('BrandHeroFactory');
-    const factory = BrandHeroFactory.attach(deployed.deployments[0].address);
-    
-    // Deploy a test business contract through the factory
-    const testBusinessTx = await factory.deployBusinessContract(
-      "test-uuid-123", 
-      "Test Coffee Shop",
-      "A test loyalty program for our coffee shop",
-      "testcoffee.eth"
-    );
-    
-    const receipt = await testBusinessTx.wait();
-    console.log(`   Sample business deployed in transaction: ${receipt.hash}`);
-    
-    // Get the deployed business address from events
-    const deployEvent = receipt.logs.find(log => {
-      try {
-        const parsed = factory.interface.parseLog(log);
-        return parsed.name === 'BusinessContractDeployed';
-      } catch (e) {
-        return false;
-      }
-    });
-    
-    if (deployEvent) {
-      const parsedEvent = factory.interface.parseLog(deployEvent);
-      console.log(`   Test BusinessContract deployed at: ${parsedEvent.args.contractAddress}`);
-    }
-    
-    console.log('');
 
     // Verification process
     await chainweb.runOverChains(async (chainId) => {
@@ -89,13 +54,13 @@ async function main() {
             await new Promise(resolve => setTimeout(resolve, verificationDelay));
           }
 
-          console.log(`Attempting to verify BrandHeroFactory ${contractAddress} on chain ${chainId}...`);
+          console.log(`Attempting to verify BrandXFactory ${contractAddress} on chain ${chainId}...`);
           await run("verify:verify", {
             address: contractAddress,
             constructorArguments: []
           });
 
-          console.log(`✅ BrandHeroFactory successfully verified on chain ${chainId}`);
+          console.log(`✅ BrandXFactory successfully verified on chain ${chainId}`);
 
         } catch (verifyError) {
           console.error(`Error verifying contract on chain ${chainId}:`, verifyError.message);
@@ -104,7 +69,7 @@ async function main() {
     });
 
     console.log("========================================");
-    console.log("🎉 BrandHero deployment process completed successfully!");
+    console.log("🎉 BrandX deployment process completed successfully!");
     console.log("");
     console.log("📋 Deployment Summary:");
     deployed.deployments.forEach((deployment) => {

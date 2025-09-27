@@ -77,6 +77,57 @@ module.exports = {
   },
   mocha: {
     timeout: 300000
+  },
+  etherscan: {
+    apiKey: {
+      chainweb_testnet20: 'abc',
+      chainweb_testnet21: 'abc',
+      chainweb_testnet22: 'abc',
+      chainweb_testnet23: 'abc',
+      chainweb_testnet24: 'abc'
+    },
+    customChains: [
+      {
+        network: "chainweb_testnet20",
+        chainId: 5920,
+        urls: {
+          apiURL: "https://chain-20.evm-testnet-blockscout.chainweb.com/api",
+          browserURL: "https://chain-20.evm-testnet-blockscout.chainweb.com"
+        }
+      },
+      {
+        network: "chainweb_testnet21",
+        chainId: 5921,
+        urls: {
+          apiURL: "https://chain-21.evm-testnet-blockscout.chainweb.com/api",
+          browserURL: "https://chain-21.evm-testnet-blockscout.chainweb.com"
+        }
+      },
+      {
+        network: "chainweb_testnet22",
+        chainId: 5922,
+        urls: {
+          apiURL: "https://chain-22.evm-testnet-blockscout.chainweb.com/api",
+          browserURL: "https://chain-22.evm-testnet-blockscout.chainweb.com"
+        }
+      },
+      {
+        network: "chainweb_testnet23",
+        chainId: 5923,
+        urls: {
+          apiURL: "https://chain-23.evm-testnet-blockscout.chainweb.com/api",
+          browserURL: "https://chain-23.evm-testnet-blockscout.chainweb.com"
+        }
+      },
+      {
+        network: "chainweb_testnet24",
+        chainId: 5924,
+        urls: {
+          apiURL: "https://chain-24.evm-testnet-blockscout.chainweb.com/api",
+          browserURL: "https://chain-24.evm-testnet-blockscout.chainweb.com"
+        }
+      }
+    ]
   }
 
 };

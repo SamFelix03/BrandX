@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use default resolver if not provided
-    const RESOLVER_ADDRESS = resolverAddress || "0xeEe706A6Ef4a1f24827a58fB7bE6a07c6F219d1A"
+    const RESOLVER_ADDRESS = resolverAddress || "0x5824Ef215aC14955fD93e0C1E039596FDdb0514D"
     
     const publicClient = createPublicClient({
       chain: sepolia,
