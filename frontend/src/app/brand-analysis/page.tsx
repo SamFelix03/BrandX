@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth-store'
 import ShaderBackground from '../../components/shader-background'
@@ -13,7 +13,7 @@ interface AnalysisStatus {
   data?: any
 }
 
-export default function BrandAnalysisPage() {
+function BrandAnalysisContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { authenticated, user, business, businessLoading, ready } = useAuthStore()
@@ -174,7 +174,7 @@ export default function BrandAnalysisPage() {
           {/* Header Section */}
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-light text-white mb-4">
-              <span className="font-medium italic instrument">BrandHero</span> Analysis
+              <span className="font-medium italic instrument">BrandX</span> Analysis
             </h1>
             <p className="text-white/70 text-lg max-w-3xl mx-auto">
               Our AI is conducting a comprehensive analysis of {business?.business_name} to generate personalized bounty suggestions.
@@ -284,12 +284,33 @@ export default function BrandAnalysisPage() {
               <p>• Evaluating market positioning and competitors</p>
               <p>• Generating personalized bounty recommendations</p>
             </div>
-            <div className="mt-4 text-white/50 text-xs">
-              This process typically takes 2-5 minutes depending on your brand's online presence.
+            <div className="mt-6 bg-yellow-500/10 border border-yellow-400/30 rounded-lg p-4 text-center">
+              <span className="text-yellow-300 font-semibold text-lg">
+                This process typically takes about 20 minutes.<br />
+                <span className="text-yellow-200 font-normal text-base">Please be patient while we analyze your brand.</span>
+              </span>
             </div>
           </div>
         </div>
       </main>
     </ShaderBackground>
+  )
+}
+
+export default function BrandAnalysisPage() {
+  return (
+    <Suspense fallback={
+      <ShaderBackground>
+        <DashboardHeader />
+        <main className="absolute top-20 left-0 right-0 bottom-0 flex items-center justify-center z-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white/70">Loading...</p>
+          </div>
+        </main>
+      </ShaderBackground>
+    }>
+      <BrandAnalysisContent />
+    </Suspense>
   )
 }

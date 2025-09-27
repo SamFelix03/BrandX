@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, createWalletClient, http, decodeEventLog } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { arbitrumSepolia } from 'viem/chains'
-import { BUSINESS_CONTRACT_ABI, NETWORK_CONFIG, REWARD_TYPES } from '@/lib/constants'
+import { chainwebEvmTestnet } from '@/lib/chains'
+import { BUSINESS_CONTRACT_ABI, REWARD_TYPES } from '@/lib/constants'
 
 interface RewardData {
   name: string
@@ -104,15 +104,15 @@ export async function POST(request: NextRequest) {
 
     // Initialize Web3 clients
     const publicClient = createPublicClient({
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     const account = privateKeyToAccount(process.env.DEPLOYER_PRIVATE_KEY as `0x${string}`)
     const walletClient = createWalletClient({
       account,
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     // Step 1: Ensure reward template exists (reuse if matching one found)
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
 
       const rewardReceipt = await publicClient.waitForTransactionReceipt({ 
         hash: rewardHash,
-        timeout: 60_000
+        timeout: 240_000
       })
 
       for (const log of rewardReceipt.logs) {
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
     // Wait for bounty transaction
     const bountyReceipt = await publicClient.waitForTransactionReceipt({ 
       hash: bountyHash,
-      timeout: 60_000
+      timeout: 240_000
     })
 
     // Extract bounty ID from logs

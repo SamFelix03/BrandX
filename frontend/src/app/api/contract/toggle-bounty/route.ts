@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { arbitrumSepolia } from 'viem/chains'
-import { BUSINESS_CONTRACT_ABI, NETWORK_CONFIG } from '@/lib/constants'
+import { chainwebEvmTestnet } from '@/lib/chains'
+import { BUSINESS_CONTRACT_ABI } from '@/lib/constants'
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,15 +26,15 @@ export async function POST(req: NextRequest) {
 
     // Initialize Web3 clients
     const publicClient = createPublicClient({
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     const account = privateKeyToAccount(process.env.DEPLOYER_PRIVATE_KEY as `0x${string}`)
     const walletClient = createWalletClient({
       account,
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     // Check if bounty exists first
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     // Wait for transaction confirmation
     const receipt = await publicClient.waitForTransactionReceipt({
       hash,
-      timeout: 60_000 // 60 seconds timeout
+      timeout: 240_000 // 60 seconds timeout
     })
 
     if (receipt.status === 'success') {

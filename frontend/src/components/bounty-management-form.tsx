@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { REWARD_TYPES, DEFAULT_VALUES, VALIDATION, REWARD_TEMPLATES, WEB2_REWARD_TEMPLATES } from '@/lib/constants'
+import { BountyWithImpacts, MetricImpacts } from '@/types/bounty-with-impacts'
 
 interface Business {
   id: string
@@ -36,8 +37,12 @@ interface Bounty {
   suggested?: boolean
   category?: string
   difficulty?: string
-  estimatedReward?: number
+  estimatedReward?: number | string
   targetAudience?: string
+  // New fields for metric impacts
+  successMetrics?: string[]
+  metricImpacts?: { [key: string]: number }
+  impactUsers?: number
 }
 
 interface Prize {
@@ -52,20 +57,38 @@ interface Prize {
 interface BountyManagementFormProps {
   business: Business
   walletAddress: string
+  showAnalysisModal: boolean
+  setShowAnalysisModal: (show: boolean) => void
+  editingBounty: boolean
+  setEditingBounty: (editing: boolean) => void
+  editingPrize: boolean
+  setEditingPrize: (editing: boolean) => void
+  selectedBountyIndices: Set<number>
+  setSelectedBountyIndices: (indices: Set<number>) => void
 }
 
-export default function BountyManagementForm({ business, walletAddress }: BountyManagementFormProps) {
+export default function BountyManagementForm({ 
+  business, 
+  walletAddress, 
+  showAnalysisModal, 
+  setShowAnalysisModal,
+  editingBounty,
+  setEditingBounty,
+  editingPrize,
+  setEditingPrize,
+  selectedBountyIndices,
+  setSelectedBountyIndices
+}: BountyManagementFormProps) {
   const router = useRouter()
   const [bounties, setBounties] = useState<Bounty[]>([])
   const [prizes, setPrizes] = useState<Prize[]>([])
   const [loading, setLoading] = useState(true)
   const [deploying, setDeploying] = useState(false)
   const [activeTab, setActiveTab] = useState<'bounties' | 'prizes'>('bounties')
-  const [editingBounty, setEditingBounty] = useState<Bounty | null>(null)
-  const [editingPrize, setEditingPrize] = useState<Prize | null>(null)
+  const [currentBounty, setCurrentBounty] = useState<Bounty | null>(null)
+  const [currentPrize, setCurrentPrize] = useState<Prize | null>(null)
   const [showAddBounty, setShowAddBounty] = useState(false)
   const [showAddPrize, setShowAddPrize] = useState(false)
-  const [showAnalysisModal, setShowAnalysisModal] = useState(false)
   const [analysisData, setAnalysisData] = useState<any>(null)
   
   // Load existing analysis or fallback bounties
@@ -95,15 +118,21 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
 
   const loadBountiesFromAnalysis = (analysisData: any) => {
     try {
-      let bountiesToLoad = []
+      let bountiesToLoad: BountyWithImpacts[] = []
 
-      // Use the bounty_suggestions field directly from the existing table structure
-      if (analysisData.bounty_suggestions && Array.isArray(analysisData.bounty_suggestions)) {
+      // Handle new format: bounty_suggestions.bounties array
+      if (analysisData.bounty_suggestions?.bounties && Array.isArray(analysisData.bounty_suggestions.bounties)) {
+        bountiesToLoad = analysisData.bounty_suggestions.bounties
+        console.log('Using new format with bounties array and metric impacts')
+      }
+      // Fallback to old format for backwards compatibility
+      else if (analysisData.bounty_suggestions && Array.isArray(analysisData.bounty_suggestions)) {
         bountiesToLoad = analysisData.bounty_suggestions
+        console.log('Using legacy format bounties array')
       }
 
       if (bountiesToLoad.length > 0) {
-        const aiBounties = bountiesToLoad.map((bounty: any, index: number) => ({
+        const aiBounties = bountiesToLoad.map((bounty: BountyWithImpacts, index: number) => ({
           id: Date.now() + index,
           title: bounty.title,
           description: bounty.description,
@@ -114,11 +143,20 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
           category: bounty.category,
           difficulty: bounty.difficulty,
           estimatedReward: bounty.estimated_reward,
-          targetAudience: bounty.target_audience
+          targetAudience: bounty.target_audience,
+          // Keep the new fields for impact calculation
+          successMetrics: bounty.success_metrics,
+          metricImpacts: bounty.metric_impacts,
+          impactUsers: bounty.impact_users
         }))
         
         console.log(`Loaded ${aiBounties.length} AI-generated bounties for ${analysisData.brand_name}`)
         setBounties(aiBounties)
+        
+        // Set all bounties as selected by default
+        const allIndices = new Set(Array.from({ length: aiBounties.length }, (_, i) => i))
+        setSelectedBountyIndices(allIndices)
+        console.log(`Selected all ${aiBounties.length} bounties by default`)
       } else {
         console.log('No bounties found in analysis data, loading fallback bounties')
         loadFallbackBounties()
@@ -176,6 +214,10 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
       }
     ])
     
+    // Set all fallback bounties as selected by default
+    const allIndices = new Set([0, 1, 2]) // 3 fallback bounties
+    setSelectedBountyIndices(allIndices)
+    
     loadDefaultPrizes()
     setLoading(false)
   }
@@ -219,14 +261,16 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
 
   const handleAddBounty = () => {
     const newBounty = createNewBounty()
-    setEditingBounty(newBounty)
+    setCurrentBounty(newBounty)
     setShowAddBounty(true)
+    setEditingBounty(true)
   }
 
   const handleAddPrize = () => {
     const newPrize = createNewPrize()
-    setEditingPrize(newPrize)
+    setCurrentPrize(newPrize)
     setShowAddPrize(true)
+    setEditingPrize(true)
   }
 
   const saveBounty = (bounty: Bounty) => {
@@ -235,8 +279,9 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
     } else {
       setBounties(prev => [...prev, { ...bounty, id: Date.now() }])
     }
-    setEditingBounty(null)
+    setCurrentBounty(null)
     setShowAddBounty(false)
+    setEditingBounty(false)
   }
 
   const savePrize = (prize: Prize) => {
@@ -245,13 +290,11 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
     } else {
       setPrizes(prev => [...prev, { ...prize, id: Date.now() }])
     }
-    setEditingPrize(null)
+    setCurrentPrize(null)
     setShowAddPrize(false)
+    setEditingPrize(false)
   }
 
-  const deleteBounty = (id: number) => {
-    setBounties(prev => prev.filter(b => b.id !== id))
-  }
 
   const deletePrize = (id: number) => {
     setPrizes(prev => prev.filter(p => p.id !== id))
@@ -279,9 +322,12 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
 
       const contractAddress = deployResult.contractAddress
 
-      // Step 2: Add bounties with embedded reward data
-      for (const bounty of bounties) {
-        if (!bounty.rewardData) continue
+      // Step 2: Add bounties with embedded reward data (only selected ones)
+      for (let i = 0; i < bounties.length; i++) {
+        const bounty = bounties[i]
+        
+        // Only deploy bounties that are selected AND have reward data
+        if (!selectedBountyIndices.has(i) || !bounty.rewardData) continue
 
         const bountyResponse = await fetch('/api/add-bounty', {
           method: 'POST',
@@ -359,22 +405,22 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
 
   return (
     <div className="space-y-6">
-      {/* Analysis Link */}
+      {/* Analysis Link
       <div className="bg-white/5 border border-white/10 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="text-white font-medium mb-1">BrandHero Analysis</h4>
+            <h4 className="text-white font-medium mb-1">BrandX Analysis</h4>
             <p className="text-white/70 text-sm">View comprehensive brand insights and analysis results</p>
           </div>
           <button
             onClick={() => setShowAnalysisModal(true)}
-            className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+            className="px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg hover:bg-white/20 transition-colors"
             disabled={!analysisData}
           >
             View Analysis
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-white/5 backdrop-blur-sm rounded-lg p-1 border border-white/10">
@@ -407,7 +453,7 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
             <h3 className="text-xl font-medium text-white">Bounties & Rewards</h3>
             <button
               onClick={handleAddBounty}
-              className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-white/90 transition-colors"
+              className="px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg font-medium hover:bg-white/20 transition-colors"
             >
               Add Custom Bounty
             </button>
@@ -423,8 +469,21 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
                 <BountyCard
                   key={bounty.id || index}
                   bounty={bounty}
-                  onEdit={() => setEditingBounty(bounty)}
-                  onDelete={() => bounty.id && deleteBounty(bounty.id)}
+                  index={index}
+                  isSelected={selectedBountyIndices.has(index)}
+                  onEdit={() => {
+                    setCurrentBounty(bounty)
+                    setEditingBounty(true)
+                  }}
+                  onToggleSelect={() => {
+                    const newSelected = new Set(selectedBountyIndices)
+                    if (newSelected.has(index)) {
+                      newSelected.delete(index)
+                    } else {
+                      newSelected.add(index)
+                    }
+                    setSelectedBountyIndices(newSelected)
+                  }}
                 />
               ))}
             </div>
@@ -439,7 +498,7 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
             <h3 className="text-xl font-medium text-white">Point-Based Prizes</h3>
             <button
               onClick={handleAddPrize}
-              className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-white/90 transition-colors"
+              className="px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg font-medium hover:bg-white/20 transition-colors"
             >
               Add Prize
             </button>
@@ -455,7 +514,10 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
                 <PrizeCard
                   key={prize.id || index}
                   prize={prize}
-                  onEdit={() => setEditingPrize(prize)}
+                  onEdit={() => {
+                    setCurrentPrize(prize)
+                    setEditingPrize(true)
+                  }}
                   onDelete={() => prize.id && deletePrize(prize.id)}
                 />
               ))}
@@ -469,7 +531,7 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
         <button
           onClick={deployContract}
           disabled={deploying || (bounties.length === 0 && prizes.length === 0)}
-          className="px-8 py-4 bg-white hover:bg-white-700 disabled:bg-white-600/50 text-black rounded-lg font-medium text-lg transition-colors disabled:cursor-not-allowed"
+          className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg font-medium text-lg hover:bg-white/20 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           {deploying ? 'Deploying Smart Contract...' : 'Deploy Business Contract'}
         </button>
@@ -479,25 +541,27 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
       </div>
 
       {/* Edit Modals */}
-      {editingBounty && (
+      {currentBounty && (
         <BountyEditModal
-          bounty={editingBounty}
+          bounty={currentBounty}
           business={business}
           onSave={saveBounty}
           onCancel={() => {
-            setEditingBounty(null)
+            setCurrentBounty(null)
             setShowAddBounty(false)
+            setEditingBounty(false)
           }}
         />
       )}
 
-      {editingPrize && (
+      {currentPrize && (
         <PrizeEditModal
-          prize={editingPrize}
+          prize={currentPrize}
           onSave={savePrize}
           onCancel={() => {
-            setEditingPrize(null)
+            setCurrentPrize(null)
             setShowAddPrize(false)
+            setEditingPrize(false)
           }}
         />
       )}
@@ -515,38 +579,58 @@ export default function BountyManagementForm({ business, walletAddress }: Bounty
 // Bounty Card Component
 function BountyCard({ 
   bounty, 
+  index,
+  isSelected,
   onEdit, 
-  onDelete 
+  onToggleSelect
 }: { 
   bounty: Bounty
+  index: number
+  isSelected: boolean
   onEdit: () => void
-  onDelete: () => void 
+  onToggleSelect: () => void
 }) {
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+    <div 
+      className={`backdrop-blur-sm rounded-xl p-6 border transition-all cursor-pointer hover:scale-[1.02] ${
+        isSelected 
+          ? 'bg-green-500/10 border-green-500/30' 
+          : 'bg-white/5 border-white/10 hover:bg-white/10'
+      }`}
+      onClick={onToggleSelect}
+    >
       <div className="flex items-start justify-between mb-3">
-        <div className="flex flex-wrap gap-2">
-          {bounty.suggested && (
-            <div className="inline-flex items-center px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">
-              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
-              AI Suggested
-            </div>
-          )}
-          {bounty.category && (
-            <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
-              {bounty.category}
-            </span>
-          )}
-          {bounty.difficulty && (
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              bounty.difficulty === 'Easy' ? 'bg-green-500/20 text-green-300' :
-              bounty.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-300' :
-              bounty.difficulty === 'Hard' ? 'bg-red-500/20 text-red-300' :
-              'bg-gray-500/20 text-gray-300'
-            }`}>
-              {bounty.difficulty}
-            </span>
-          )}
+        <div className="flex items-center gap-3">
+          <div 
+            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+              isSelected 
+                ? 'bg-green-500 border-green-500' 
+                : 'border-white/30'
+            }`}
+          >
+            {isSelected && (
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {bounty.category && (
+              <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
+                {bounty.category}
+              </span>
+            )}
+            {bounty.difficulty && (
+              <span className={`px-2 py-1 text-xs rounded-full ${
+                bounty.difficulty === 'Easy' ? 'bg-green-500/20 text-green-300' :
+                bounty.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-300' :
+                bounty.difficulty === 'Hard' ? 'bg-red-500/20 text-red-300' :
+                'bg-gray-500/20 text-gray-300'
+              }`}>
+                {bounty.difficulty}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       
@@ -590,22 +674,19 @@ function BountyCard({
             </div>
           </>
         ) : (
-          <div className="text-yellow-400 text-sm">⚠️ No reward selected</div>
+          <div className="text-white/70 text-sm">⚠️ No reward selected</div>
         )}
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-center">
         <button
-          onClick={onEdit}
-          className="px-3 py-1 bg-white/10 text-white rounded text-sm hover:bg-white/20 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation() // Prevent card click from triggering
+            onEdit()
+          }}
+          className="px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg text-sm hover:bg-white/20 transition-colors"
         >
           {bounty.suggested ? 'View & Customize' : 'Edit'}
-        </button>
-        <button
-          onClick={onDelete}
-          className="px-3 py-1 bg-red-500/20 text-red-400 rounded text-sm hover:bg-red-500/30 transition-colors"
-        >
-          Delete
         </button>
       </div>
     </div>
@@ -643,7 +724,7 @@ function PrizeCard({
       <div className="flex items-center justify-between">
         <button
           onClick={onEdit}
-          className="px-3 py-1 bg-white/10 text-white rounded text-sm hover:bg-white/20 transition-colors"
+          className="px-3 py-1 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded text-sm hover:bg-white/20 transition-colors"
         >
           Edit
         </button>
@@ -680,56 +761,11 @@ function BountyEditModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-medium text-white mb-6">
           {bounty.id ? 'Edit Bounty' : 'Add New Bounty'}
         </h3>
-
-        {/* AI Bounty Information */}
-        {bounty.suggested && (
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
-            <div className="flex items-center mb-3">
-              <div className="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
-              <h4 className="text-blue-300 font-medium">AI-Generated Bounty</h4>
-            </div>
-            <div className="space-y-3 text-sm">
-              {bounty.category && (
-                <div className="flex justify-between">
-                  <span className="text-blue-200/70">Category:</span>
-                  <span className="text-blue-200">{bounty.category}</span>
-                </div>
-              )}
-              {bounty.difficulty && (
-                <div className="flex justify-between">
-                  <span className="text-blue-200/70">Difficulty:</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${
-                    bounty.difficulty === 'Easy' ? 'bg-green-500/20 text-green-300' :
-                    bounty.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-300' :
-                    bounty.difficulty === 'Hard' ? 'bg-red-500/20 text-red-300' :
-                    'bg-gray-500/20 text-gray-300'
-                  }`}>
-                    {bounty.difficulty}
-                  </span>
-                </div>
-              )}
-              {bounty.estimatedReward && (
-                <div className="flex justify-between">
-                  <span className="text-blue-200/70">Est. Reward:</span>
-                  <span className="text-blue-200">{bounty.estimatedReward}</span>
-                </div>
-              )}
-              {bounty.targetAudience && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-blue-200/70">Target Audience:</span>
-                  <span className="text-blue-200 text-xs bg-blue-500/10 rounded p-2 leading-relaxed">
-                    {bounty.targetAudience}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -824,13 +860,13 @@ function BountyEditModal({
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+              className="px-6 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg hover:bg-white/20 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors"
+              className="px-6 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg hover:bg-white/20 transition-colors"
             >
               Save Bounty
             </button>
@@ -861,8 +897,8 @@ function PrizeEditModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-xl p-6 w-full max-w-lg">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 w-full max-w-lg">
         <h3 className="text-xl font-medium text-white mb-6">
           {prize.id ? 'Edit Prize' : 'Add New Prize'}
         </h3>
@@ -921,13 +957,13 @@ function PrizeEditModal({
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+              className="px-6 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg hover:bg-white/20 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors"
+              className="px-6 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-lg hover:bg-white/20 transition-colors"
             >
               Save Prize
             </button>
@@ -1013,7 +1049,7 @@ function AnalysisModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-white/10">
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-2xl font-semibold text-white">Brand Analysis Results</h2>

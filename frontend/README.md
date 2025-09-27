@@ -1,36 +1,160 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BrandX Frontend
 
-## Getting Started
+A modern web application built with Next.js that enables businesses to create and manage loyalty programs through blockchain technology and AI-powered bounty systems.
 
-First, run the development server:
+## 🚀 Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Core Framework
+- **Next.js 15.5.3** - React framework with App Router
+- **React 19.1.0** - Latest React with concurrent features
+- **TypeScript 5** - Type-safe development
+
+### Authentication & Web3
+- **Privy** - Web3 authentication with embedded wallets
+- **Ethers.js 5.7.2** - Ethereum blockchain interaction
+- **Viem 2.37.5** - Modern Ethereum library for contract interactions
+
+### Database & Backend
+- **Supabase** - PostgreSQL database with real-time features
+- **Zustand 5.0.8** - Lightweight state management
+
+### UI & Styling
+- **Tailwind CSS 4** - Utility-first CSS framework
+- **Framer Motion 12.23.12** - Animation library
+- **Geist Font** - Modern typography
+- **Paper Design Shaders** - WebGL shader effects
+
+### Development Tools
+- **ESLint** - Code linting and formatting
+- **PostCSS** - CSS processing
+
+## 🎯 Key Features
+
+### Business Management
+- **Business Onboarding** - Complete setup flow for new businesses
+- **Dashboard** - Comprehensive business analytics and management
+- **Brand Analysis** - AI-powered brand sentiment analysis
+- **Bounty Management** - Create and manage customer engagement bounties
+
+### Consumer Experience
+- **Consumer Dashboard** - Personalized loyalty program interface
+- **Bounty Completion** - Interactive task completion system
+- **Voucher System** - Digital reward claiming and management
+- **Member Profiles** - User profile and loyalty status tracking
+
+### Blockchain Integration
+- **Smart Contract Deployment** - Automated contract deployment for businesses
+- **ENS Integration** - Ethereum Name Service subdomain management
+- **Token Rewards** - Web3 token-based loyalty programs
+- **Voucher Claims** - On-chain reward verification and claiming
+
+### AI-Powered Features
+- **Bounty Suggestions** - AI-generated engagement task recommendations
+- **Brand Analysis** - Automated social media and review sentiment analysis
+- **Smart Rewards** - Dynamic reward calculation based on user behavior
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes for backend functionality
+│   ├── business-*/        # Business-facing pages
+│   ├── consumer/          # Consumer-facing pages
+│   └── brand-analysis/    # AI analysis features
+├── components/            # Reusable React components
+├── lib/                   # Utility functions and configurations
+├── stores/                # Zustand state management
+└── types/                 # TypeScript type definitions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
+- Node.js 18+ 
+- npm, yarn, pnpm, or bun
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Installation
 
-## Learn More
+1. Install dependencies:
+```bash
+npm install
+```
 
-To learn more about Next.js, take a look at the following resources:
+2. Set up environment variables:
+```bash
+# Copy the example env file
+cp .env.example .env.local
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Add your environment variables:
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Run the development server:
+```bash
+npm run dev
+```
 
-## Deploy on Vercel
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔧 Available Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+## 🌟 Key Components
+
+### Authentication System
+- **Privy Integration** - Web3 wallet authentication
+- **Auth Middleware** - Route protection and user state management
+- **Auth Store** - Centralized authentication state
+
+### Business Features
+- **Business Onboarding Form** - Multi-step business registration
+- **Bounty Management** - Create and manage customer engagement tasks
+- **Brand Analysis Dashboard** - AI-powered brand monitoring
+
+### Consumer Features
+- **Consumer Dashboard** - Personalized loyalty program interface
+- **Bounty Completion Modal** - Interactive task completion
+- **Voucher Management** - Digital reward system
+
+### Blockchain Features
+- **Contract Integration** - Smart contract interaction utilities
+- **ENS Management** - Subdomain creation and verification
+- **Token Operations** - ERC-20 token reward handling
+
+## 🔗 API Endpoints
+
+The application includes comprehensive API routes for:
+- Business management and onboarding
+- Bounty creation and completion
+- Smart contract interactions
+- ENS subdomain operations
+- AI-powered brand analysis
+- User profile management
+- Loyalty program administration
+
+## 🎨 Design System
+
+- **Modern UI** - Clean, professional interface design
+- **Responsive Design** - Mobile-first responsive layout
+- **Dark Theme** - Consistent dark mode throughout
+- **Smooth Animations** - Framer Motion powered transitions
+- **Shader Effects** - WebGL background effects for visual appeal
+
+## 🚀 Deployment
+
+The application is optimized for deployment on Vercel with:
+- Automatic builds from Git
+- Edge runtime optimization
+- Static asset optimization
+- Environment variable management
+
+## 📝 License
+
+This project is part of the BrandX ecosystem. See the main project LICENSE for details.

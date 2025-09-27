@@ -36,6 +36,7 @@ interface ProcessingStatus {
 
 const ORCHESTRATOR_BASE_URL = 'https://orchestrator-739298578243.us-central1.run.app'
 const BOUNTY_AGENT_URL = 'https://bountyagent-739298578243.us-central1.run.app'
+const METRICS_AGENT_URL = 'https://metricsagent-739298578243.us-central1.run.app'
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,11 +71,14 @@ export async function POST(request: NextRequest) {
         
         // Check if this is the complete analysis response (has all the analysis fields)
         if (statusData.brand_name && statusData.web_search_result && businessData.id) {
-          // This is the complete analysis! Fetch bounties and save to database
-          const bountiesData = await fetchBountiesFromEndpoint()
+          // This is the complete analysis! Fetch bounties and metrics and save to database
+          const [bountiesData, metricsData] = await Promise.all([
+            fetchBountiesFromEndpoint(),
+            fetchMetricsFromEndpoint()
+          ])
           
-          // Save both analysis and bounty data to database
-          await saveBrandAnalysisToDatabase(businessData.id, statusData, bountiesData)
+          // Save analysis, bounty, and metrics data to database
+          await saveBrandAnalysisToDatabase(businessData.id, statusData, bountiesData, metricsData)
           
           return NextResponse.json({
             success: true,
@@ -185,35 +189,72 @@ async function fetchBountiesFromEndpoint() {
   }
 }
 
-async function saveBrandAnalysisToDatabase(businessId: string, analysisData: AIAnalysisResponse, bountiesData?: any) {
+async function fetchMetricsFromEndpoint() {
   try {
-    // Parse metrics result from status endpoint
-    let metricsData = null
-    try {
-      metricsData = JSON.parse(analysisData.metrics_result)
-    } catch (e) {
-      console.error('Failed to parse metrics result:', e)
+    const metricsResponse = await fetch(`${METRICS_AGENT_URL}/brand/metrics/last`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!metricsResponse.ok) {
+      console.error('Failed to fetch metrics from endpoint:', metricsResponse.status)
+      return null
+    }
+
+    const metricsData = await metricsResponse.json()
+    console.log('Successfully fetched metrics from endpoint:', metricsData)
+    return metricsData
+  } catch (error) {
+    console.error('Error fetching metrics from endpoint:', error)
+    return null
+  }
+}
+
+async function saveBrandAnalysisToDatabase(businessId: string, analysisData: AIAnalysisResponse, bountiesData?: any, metricsData?: any) {
+  try {
+    // Use structured metrics data from metrics agent if available, otherwise fallback to parsing status endpoint
+    let structuredMetricsData = null
+    if (metricsData && metricsData.success && metricsData.metrics) {
+      // Use the structured metrics from the metrics agent
+      structuredMetricsData = metricsData.metrics
+      console.log(`Using structured metrics data for ${metricsData.brand_name}`)
+    } else {
+      // Fallback to parsing metrics result from status endpoint
+      try {
+        structuredMetricsData = JSON.parse(analysisData.metrics_result)
+        console.log('Using fallback metrics data from status endpoint')
+      } catch (e) {
+        console.error('Failed to parse metrics result from status endpoint:', e)
+      }
     }
 
     // Use bounties data from dedicated endpoint if available, otherwise fallback to status endpoint
-    let bountiesToStore = []
+    let bountyStructureToStore = null
     if (bountiesData && bountiesData.auto_generated_bounties) {
-      // Get bounties from the dedicated bounty endpoint (preferred)
+      // Get the complete bounty structure from the dedicated bounty endpoint (preferred)
       const brandKey = Object.keys(bountiesData.auto_generated_bounties)[0]
-      if (brandKey && bountiesData.auto_generated_bounties[brandKey]?.bounties) {
-        bountiesToStore = bountiesData.auto_generated_bounties[brandKey].bounties
+      if (brandKey && bountiesData.auto_generated_bounties[brandKey]) {
+        bountyStructureToStore = bountiesData.auto_generated_bounties[brandKey]
+        console.log(`Using complete bounty structure for ${brandKey} with ${bountyStructureToStore.bounties?.length || 0} bounties`)
       }
     } else {
       // Fallback to bounty result from status endpoint
       try {
         const bountyData = JSON.parse(analysisData.bounty_result)
-        bountiesToStore = bountyData?.auto_generated_bounties?.[analysisData.brand_name]?.bounties || []
+        const brandBounties = bountyData?.auto_generated_bounties?.[analysisData.brand_name]
+        if (brandBounties) {
+          bountyStructureToStore = brandBounties
+          console.log('Using fallback bounty structure from status endpoint')
+        }
       } catch (e) {
         console.error('Failed to parse bounty result from status endpoint:', e)
       }
     }
 
-    console.log(`Storing ${bountiesToStore.length} bounties for ${analysisData.brand_name}`)
+    const bountyCount = bountyStructureToStore?.bounties?.length || 0
+    console.log(`Storing complete bounty structure with ${bountyCount} bounties for ${analysisData.brand_name}`)
 
     // Insert into brand_analysis table using the existing schema
     const { error } = await supabase
@@ -228,13 +269,14 @@ async function saveBrandAnalysisToDatabase(businessId: string, analysisData: AIA
         positive_reddit_result: analysisData.positive_reddit_result,
         negative_social_result: analysisData.negative_social_result,
         positive_social_result: analysisData.positive_social_result,
-        metrics_result: metricsData,
-        bounty_suggestions: bountiesToStore, // Store the actual bounties array in bounty_suggestions
+        metrics_result: structuredMetricsData,
+        bounty_suggestions: bountyStructureToStore, // Store the complete bounty structure with impacts
         analysis_timestamp: analysisData.timestamp,
         kg_storage_status: analysisData.kg_storage_status,
         raw_response: {
           status_endpoint: analysisData,
-          bounty_endpoint: bountiesData
+          bounty_endpoint: bountiesData,
+          metrics_endpoint: metricsData
         }
       }, {
         onConflict: 'business_id'

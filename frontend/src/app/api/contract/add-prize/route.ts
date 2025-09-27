@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createWalletClient, http } from 'viem'
-import { arbitrumSepolia } from 'viem/chains'
+import { chainwebEvmTestnet } from '@/lib/chains'
 import { privateKeyToAccount } from 'viem/accounts'
-import { BUSINESS_CONTRACT_ABI, NETWORK_CONFIG } from '@/lib/constants'
+import { BUSINESS_CONTRACT_ABI } from '@/lib/constants'
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
     
     const walletClient = createWalletClient({
       account,
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     console.log('Creating prize on contract:', contractAddress)

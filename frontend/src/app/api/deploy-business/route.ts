@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicClient, createWalletClient, http, decodeEventLog } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { arbitrumSepolia } from 'viem/chains'
+import { chainwebEvmTestnet } from '@/lib/chains'
 import { supabase } from '@/lib/supabase'
-import { CONTRACT_ADDRESSES, FACTORY_ABI, NETWORK_CONFIG } from '@/lib/constants'
+import { CONTRACT_ADDRESSES, FACTORY_ABI } from '@/lib/constants'
 
 interface Business {
   id: string
@@ -41,15 +41,15 @@ export async function POST(request: NextRequest) {
 
     // Initialize Web3 clients
     const publicClient = createPublicClient({
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     const account = privateKeyToAccount(process.env.DEPLOYER_PRIVATE_KEY as `0x${string}`)
     const walletClient = createWalletClient({
       account,
-      chain: arbitrumSepolia,
-      transport: http(NETWORK_CONFIG.rpcUrl)
+      chain: chainwebEvmTestnet,
+      transport: http()
     })
 
     // Deploy business contract via factory
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Wait for transaction confirmation
     const deployReceipt = await publicClient.waitForTransactionReceipt({ 
       hash: deployHash,
-      timeout: 60_000 // 60 second timeout
+      timeout: 240_000 // 60 second timeout
     })
 
     console.log('Transaction confirmed:', deployReceipt.transactionHash)

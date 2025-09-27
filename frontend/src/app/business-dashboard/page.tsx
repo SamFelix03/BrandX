@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth-store'
+import { useSendTransaction } from '@privy-io/react-auth'
 import { REWARD_TEMPLATES, WEB2_REWARD_TEMPLATES } from '@/lib/constants'
 import BusinessGradientBackground from '../../components/business-gradient-background'
 import DashboardHeader from '../../components/dashboard-header'
@@ -86,6 +87,7 @@ interface LoyaltyRequest {
 export default function BusinessDashboard() {
   const router = useRouter()
   const { authenticated, user, business, businessLoading, ready } = useAuthStore()
+  const { sendTransaction } = useSendTransaction()
   
   // State for contract data
   const [bounties, setBounties] = useState<ContractBounty[]>([])
@@ -99,7 +101,7 @@ export default function BusinessDashboard() {
   // Modal states
   const [showAddBounty, setShowAddBounty] = useState(false)
   const [showAddPrize, setShowAddPrize] = useState(false)
-  const [activeTab, setActiveTab] = useState<'members' | 'bounties' | 'analysis' | 'prizes' | 'requests' | 'profile'>('members')
+  const [activeTab, setActiveTab] = useState<'members' | 'bounties' | 'analysis' | 'prizes' | 'requests' | 'profile' | 'services'>('members')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [creatingBounty, setCreatingBounty] = useState(false)
   const [creatingBountyStep, setCreatingBountyStep] = useState<'idle' | 'addingTemplate' | 'creatingBounty' | 'done' | 'error'>('idle')
@@ -110,7 +112,11 @@ export default function BusinessDashboard() {
   const [togglingBounties, setTogglingBounties] = useState<Set<string>>(new Set())
   const [showMemberDetails, setShowMemberDetails] = useState(false)
   const [selectedMember, setSelectedMember] = useState<ContractMember | null>(null)
-  const anyModalOpen = showAddBounty || showAddPrize || showBountyDetails || showMemberDetails
+  const [postingTweet, setPostingTweet] = useState(false)
+  const [showTweetModal, setShowTweetModal] = useState(false)
+  const [tweetData, setTweetData] = useState<any>(null)
+  const [expandedService, setExpandedService] = useState<string | null>(null)
+  const anyModalOpen = showAddBounty || showAddPrize || showBountyDetails || showMemberDetails || showTweetModal
 
   const parseJSONSafely = (value: string | undefined | null) => {
     if (!value) return null
@@ -270,95 +276,37 @@ export default function BusinessDashboard() {
           return
         }
 
-        // Step 4: Execute ENS transaction using connected wallet
-        console.log('Executing ENS transaction with connected wallet...')
+        // Step 4: Execute ENS transaction using Privy sendTransaction
+        console.log('Executing ENS transaction with Privy sendTransaction...')
         
         try {
-          // Import wallet client utilities
-          const { createWalletClient, custom } = await import('viem')
-          const { sepolia } = await import('viem/chains')
+          // Import viem to encode the function call data
+          const { encodeFunctionData } = await import('viem')
           
-          // Get the Privy wallet provider
-          if (!user.wallet?.walletClientType) {
-            alert('Please connect your wallet to mint ENS subdomains')
-            return
-          }
-
-          // Check if window.ethereum is available
-          if (typeof window === 'undefined' || !window.ethereum) {
-            alert('Ethereum provider not found. Please make sure your wallet is connected.')
-            return
-          }
-
-          // Check current chain and switch to Sepolia if needed
-          const ethereum = window.ethereum as any
-          const currentChainId = await ethereum.request({ method: 'eth_chainId' })
-          const sepoliaChainId = '0x' + sepolia.id.toString(16) // Convert 11155111 to hex: 0xaa36a7
-          
-          console.log('Current chain ID:', currentChainId)
-          console.log('Required chain ID (Sepolia):', sepoliaChainId)
-          
-          if (currentChainId !== sepoliaChainId) {
-            console.log('Wrong network detected. Switching to Sepolia...')
-            
-            try {
-              // Try to switch to Sepolia
-              await ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: sepoliaChainId }],
-              })
-              
-              console.log('Successfully switched to Sepolia')
-            } catch (switchError: any) {
-              console.error('Failed to switch to Sepolia:', switchError)
-              
-              // If the chain hasn't been added to the user's wallet, add it
-              if (switchError.code === 4902) {
-                try {
-                  await ethereum.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [
-                      {
-                        chainId: sepoliaChainId,
-                        chainName: 'Sepolia Testnet',
-                        rpcUrls: ['https://sepolia.infura.io/v3/'],
-                        nativeCurrency: {
-                          name: 'ETH',
-                          symbol: 'ETH',
-                          decimals: 18,
-                        },
-                        blockExplorerUrls: ['https://sepolia.etherscan.io'],
-                      },
-                    ],
-                  })
-                  console.log('Successfully added and switched to Sepolia')
-                } catch (addError) {
-                  console.error('Failed to add Sepolia network:', addError)
-                  alert('Please manually switch your wallet to Sepolia testnet to mint ENS subdomains')
-                  return
-                }
-              } else {
-                alert('Please switch your wallet to Sepolia testnet to mint ENS subdomains')
-                return
-              }
-            }
-          }
-
-          // Create wallet client with Privy provider (after ensuring we're on Sepolia)
-          const walletClient = createWalletClient({
-            chain: sepolia,
-            transport: custom(window.ethereum as any),
-            account: user.wallet.address as `0x${string}`
-          })
-
-          // Execute the ENS transaction
-          const hash = await walletClient.writeContract({
-            address: ensData.transactionData.to as `0x${string}`,
+          // Encode the function call data from the API response
+          const encodedData = encodeFunctionData({
             abi: ensData.transactionData.abi,
             functionName: ensData.transactionData.functionName,
             args: ensData.transactionData.args
           })
 
+          // Prepare transaction data for Privy
+          const transactionData = {
+            to: ensData.transactionData.to as `0x${string}`,
+            data: encodedData, // The encoded function call data
+            chainId: 11155111 // Sepolia chain ID
+          }
+
+          console.log('Sending transaction via Privy:', transactionData)
+
+          // Execute the ENS transaction using Privy's sendTransaction
+          const result = await sendTransaction({
+            to: transactionData.to,
+            data: transactionData.data,
+            chainId: transactionData.chainId // Sepolia chain ID as number
+          })
+
+          const hash = result.hash
           console.log('ENS transaction hash:', hash)
 
           // Step 5: Verify ENS subdomain was created
@@ -469,6 +417,49 @@ export default function BusinessDashboard() {
         newSet.delete(requestId)
         return newSet
       })
+    }
+  }
+
+  const handlePostTweet = async () => {
+    if (!user?.wallet?.address || !business?.id) return
+    
+    setPostingTweet(true)
+    try {
+      // Get brand analysis data
+      const analysisResponse = await fetch(`/api/brand-analysis?businessId=${business.id}&walletAddress=${user.wallet.address}`)
+      const analysisResult = await analysisResponse.json()
+      
+      if (!analysisResult.success || !analysisResult.analysis) {
+        alert('No brand analysis data found. Please complete brand analysis first.')
+        return
+      }
+      
+      const analysis = analysisResult.analysis
+      
+      // Post to X defendabot API
+      const response = await fetch('https://xbot-739298578243.us-central1.run.app/defend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          negative_social_sentiment: analysis.negative_social_result || '',
+          negative_reviews: analysis.negative_reviews_result || '',
+          negative_reddit_threads: analysis.negative_reddit_result || ''
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        setTweetData(data)
+        setShowTweetModal(true)
+      } else {
+        alert('Failed to post tweet: ' + (data.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Error posting tweet:', error)
+      alert('Failed to post tweet')
+    } finally {
+      setPostingTweet(false)
     }
   }
 
@@ -683,12 +674,22 @@ export default function BusinessDashboard() {
               <button
                 className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-start gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'analysis' ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
                 onClick={() => setActiveTab('analysis')}
-                aria-label="BrandHero Analysis Results"
+                aria-label="BrandX Analysis Results"
               >
                 <svg className={`${isSidebarCollapsed ? 'w-5 h-5' : 'w-4 h-4'} ${activeTab === 'analysis' ? 'text-black' : 'text-white/80'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3v18M5 13l4 4L19 7" />
                 </svg>
-                {!isSidebarCollapsed && <span>BrandHero Analysis</span>}
+                {!isSidebarCollapsed && <span>BrandX Analysis</span>}
+              </button>
+              <button
+                className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-start gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'services' ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
+                onClick={() => setActiveTab('services')}
+                aria-label="BrandX Services"
+              >
+                <svg className={`${isSidebarCollapsed ? 'w-5 h-5' : 'w-4 h-4'} ${activeTab === 'services' ? 'text-black' : 'text-white/80'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                {!isSidebarCollapsed && <span>BrandX Services</span>}
               </button>
               <button
                 className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-start gap-3'} px-3 py-2 rounded-lg transition-colors ${activeTab === 'prizes' ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
@@ -781,15 +782,16 @@ export default function BusinessDashboard() {
                             <span className="text-xs text-white/60">Joined {joinedDate}</span>
                           </div>
                           
-                          <h4 className="text-lg font-medium text-white mb-2 truncate">
-                            {member.ensName || `${member.address.slice(0, 6)}...${member.address.slice(-4)}`}
-                          </h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-lg font-medium text-white truncate flex-1 mr-3">
+                              {member.ensName || `${member.address.slice(0, 6)}...${member.address.slice(-4)}`}
+                            </h4>
+                            <div className="px-3 py-1 bg-white/10 rounded-full text-white font-medium text-sm shrink-0">
+                              {totalPoints.toLocaleString()}
+                            </div>
+                          </div>
                           
                           <div className="space-y-2 mb-4">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-white/60">Total Points:</span>
-                              <span className="text-white font-medium">{totalPoints.toLocaleString()}</span>
-                            </div>
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-white/60">Completed Bounties:</span>
                               <span className="text-white">{member.completedBounties}</span>
@@ -805,7 +807,7 @@ export default function BusinessDashboard() {
                           </div>
 
                           <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                            <div className="text-white/60 text-xs font-mono truncate flex-1 mr-4">
+                            <div className="text-white/60 text-xs font-medium truncate flex-1 mr-4">
                               {member.address}
                             </div>
                             <button
@@ -1010,7 +1012,6 @@ export default function BusinessDashboard() {
                         <p className="text-white/70 text-sm mb-3 line-clamp-3">{prize.description}</p>
                         <div className="space-y-2 text-xs">
                           <div className="flex justify-between"><span className="text-white/60">Points Cost</span><span className="text-white font-medium">{prize.pointsCost}</span></div>
-                          <div className="flex justify-between"><span className="text-white/60">Claims</span><span className="text-white">{prize.claimed}/{prize.maxClaims === '0' ? '∞' : prize.maxClaims}</span></div>
                       </div>
                       </div>
                     ))}
@@ -1119,6 +1120,130 @@ export default function BusinessDashboard() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'services' && (
+              <div>
+                <div className="mb-6">
+                  <h3 className="text-white font-medium text-lg mb-4">BrandX Services</h3>
+                  <p className="text-white/60 text-sm mb-6">
+                    AI-powered tools and integrations to enhance your brand management and team collaboration.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* X Defendabot Service */}
+                  <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setExpandedService(expandedService === 'defendabot' ? null : 'defendabot')}
+                      className="w-full p-6 flex items-center justify-between hover:bg-white/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* X Logo */}
+                        <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                          </svg>
+                        </div>
+                        <div className="text-left">
+                          <h4 className="text-white font-medium text-lg">X Defendabot</h4>
+                          <p className="text-white/70 text-sm">
+                            Twitter bot that tweets positive content about your company and learns from interactions
+                          </p>
+                        </div>
+                      </div>
+                      <svg 
+                        className={`w-5 h-5 text-white/60 transition-transform ${expandedService === 'defendabot' ? 'rotate-180' : ''}`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {expandedService === 'defendabot' && (
+                      <div className="px-6 pb-6 border-t border-white/10">
+                        <div className="pt-4">
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4">
+                            <p className="text-white/70 text-sm leading-relaxed">
+                              X defendabot is a twitter bot that tweets on your account about the positives of your company's products/services and uses the replies/interactions on the post to learn and further broaden the knowledge graph.
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <button
+                              onClick={handlePostTweet}
+                              disabled={postingTweet}
+                              className="px-4 py-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                            >
+                              {postingTweet && (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+                              )}
+                              {postingTweet ? 'Posting Tweet...' : 'Post Tweet'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Slack Helper Service */}
+                  <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setExpandedService(expandedService === 'slack' ? null : 'slack')}
+                      className="w-full p-6 flex items-center justify-between hover:bg-white/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Slack Logo */}
+                        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" />
+                          </svg>
+                        </div>
+                        <div className="text-left">
+                          <h4 className="text-white font-medium text-lg flex items-center gap-2">
+                            Slack Helper
+                            <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
+                              Coming Soon
+                            </span>
+                          </h4>
+                          <p className="text-white/70 text-sm">
+                            Slack bot that will help the team with detailed and structured insights from the knowledge graph
+                          </p>
+                        </div>
+                      </div>
+                      <svg 
+                        className={`w-5 h-5 text-white/60 transition-transform ${expandedService === 'slack' ? 'rotate-180' : ''}`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {expandedService === 'slack' && (
+                      <div className="px-6 pb-6 border-t border-white/10">
+                        <div className="pt-4">
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                            <div className="mb-3">
+                              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <h5 className="text-white font-medium mb-2">Coming Soon</h5>
+                              <p className="text-white/60 text-sm">
+                                We're working on bringing intelligent brand insights directly to your Slack workspace.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1531,6 +1656,73 @@ export default function BusinessDashboard() {
                     className="px-6 py-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Add Prize
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tweet Posted Modal */}
+        {showTweetModal && tweetData && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 w-full max-w-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-medium text-white">Tweet Posted Successfully!</h3>
+                <button
+                  onClick={() => setShowTweetModal(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                  <h4 className="text-white font-medium mb-3">Generated Tweet</h4>
+                  <p className="text-white/80 bg-gray-800/50 rounded-lg p-4 text-sm leading-relaxed">
+                    "{tweetData.generated_tweet}"
+                  </p>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                  <h4 className="text-white font-medium mb-3">Tweet Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Status:</span>
+                      <span className="text-green-400 font-medium">
+                        {tweetData.twitter_posted ? 'Successfully Posted' : 'Failed to Post'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Tweet ID:</span>
+                      <span className="text-white text-xs">
+                        {tweetData.twitter_response?.tweet?.data?.id || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Posted:</span>
+                      <span className="text-white">
+                        {new Date(tweetData.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <button
+                    onClick={() => {
+                      const tweetId = tweetData.twitter_response?.tweet?.data?.id
+                      if (tweetId) {
+                        window.open(`https://x.com/dr_point_break/status/${tweetId}`, '_blank')
+                      }
+                    }}
+                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+                    disabled={!tweetData.twitter_response?.tweet?.data?.id}
+                  >
+                    View Tweet
                   </button>
                 </div>
               </div>
