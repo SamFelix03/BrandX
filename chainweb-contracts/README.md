@@ -14,7 +14,7 @@
    - [Explorer Link](https://chain-20.evm-testnet-blockscout.chainweb.com/token/0xc4ABAd2602D3108371eaA81FdE9A1911b62e4b4a/instance/1)
    - Token ID: `1`
 
-<img width="1266" height="682" alt="image" src="https://github.com/user-attachments/assets/3cf3b14e-9863-4d59-a67e-dd2b038706b1" />
+<img width="1163" height="662" alt="image" src="https://github.com/user-attachments/assets/fc41284e-86c4-4f8e-a668-e5b21f4d904d" />
 
 ## Why Kadena?
 
