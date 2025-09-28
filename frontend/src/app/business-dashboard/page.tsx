@@ -807,9 +807,6 @@ export default function BusinessDashboard() {
                           </div>
 
                           <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                            <div className="text-white/60 text-xs font-medium truncate flex-1 mr-4">
-                              {member.address}
-                            </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()

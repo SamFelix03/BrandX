@@ -63,7 +63,7 @@ export default function DashboardHeader({ business, isSidebarCollapsed, onToggle
             rel="noopener noreferrer"
             className="text-xs md:text-sm text-white/80 hover:text-white underline decoration-white/30 hover:decoration-white/80 underline-offset-4"
           >
-            Business Contract: <span className="font-medium">{business.smart_contract_address}</span>
+            View Business Contract
           </a>
         )}
         <button
