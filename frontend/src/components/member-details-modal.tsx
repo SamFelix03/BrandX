@@ -114,7 +114,6 @@ export default function MemberDetailsModal({
             </div>
             <div>
               <h3 className="text-2xl font-medium text-white">{memberName}</h3>
-              <p className="text-white/60 text-sm">{member.address}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -170,10 +169,6 @@ export default function MemberDetailsModal({
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white/60">ENS Name:</span>
                         <span className="text-white font-medium">{member.ensName || 'Not set'}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-white/60">Wallet Address:</span>
-                        <span className="text-white font-medium text-xs">{member.address}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white/60">Joined Date:</span>
